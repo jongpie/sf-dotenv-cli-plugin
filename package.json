@@ -1,0 +1,85 @@
+{
+  "name": "@jongpie/sf-dotenv-cli-plugin",
+  "version": "1.0.0",
+  "description": "Salesforce CLI plugin for loading environment variables from .env files",
+  "author": "Jonathan Gillespie",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jongpie/sf-dotenv-cli-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jongpie/sf-dotenv-cli-plugin/issues"
+  },
+  "homepage": "https://github.com/jongpie/sf-dotenv-cli-plugin#readme",
+  "keywords": [
+    "salesforce",
+    "cli",
+    "plugin",
+    "dotenv",
+    "environment",
+    "variables"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*",
+    "messages/**/*",
+    "npm-shrinkwrap.json",
+    "oclif.manifest.json"
+  ],
+  "dependencies": {
+    "@oclif/core": "^4.0.0",
+    "dotenv": "^16.3.1",
+    "fs-extra": "^11.1.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.0"
+  },
+  "oclif": {
+    "bin": "sf",
+    "dirname": "sf",
+    "topicSeparator": " ",
+    "plugins": [
+      "@oclif/plugin-help"
+    ],
+    "hooks": {
+      "prerun": "./lib/hooks/prerun.js"
+    },
+    "commands": "./lib/commands"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "clean": "rm -rf lib",
+    "compile": "npm run clean && npm run build",
+    "demo:env-file": "node scripts/demo-env-file.js",
+    "demo": "node scripts/demo.js",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "install:dev": "node scripts/install.js",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "lint": "eslint . --ext .ts",
+    "postpack": "rm -f oclif.manifest.json",
+    "prepack": "npm run compile",
+    "preversion": "npm run compile",
+    "test:coverage": "jest --coverage",
+    "test:debug": "jest --inspect-brk",
+    "test:env-file": "node scripts/test-env-file.js",
+    "test:watch": "jest --watch",
+    "test": "npm run compile && jest"
+  }
+}

@@ -1,5 +1,7 @@
 import { jest } from '@jest/globals';
-import hook from '../prerun';
+import { ux } from '@oclif/core/ux';
+
+import hook from '../src/hooks/prerun.js';
 
 // Create a wrapper function for testing that doesn't require proper this context
 const testHook = async (params: { Command: any; config: any; argv: string[] }) => {
@@ -20,18 +22,41 @@ const testHook = async (params: { Command: any; config: any; argv: string[] }) =
 
 // Mock the dependencies
 jest.mock('fs-extra', () => ({
-  pathExists: jest.fn(),
-  readFile: jest.fn(),
+  default: {
+    pathExists: jest.fn(),
+    readFile: jest.fn(),
+  },
 }));
 
 jest.mock('path', () => ({
-  resolve: jest.fn(),
-  relative: jest.fn(),
+  default: {
+    resolve: jest.fn(),
+    relative: jest.fn(),
+  },
+}));
+
+jest.mock('dotenv', () => ({
+  default: {
+    parse: (val: string) => {
+      return (val?.split('\n') ?? [])
+        .filter((val) => val)
+        .map((splitValue: string) => {
+          const keyValue = splitValue.split('=');
+          return { [keyValue[0]]: keyValue[1] };
+        })
+        .reduce((prev, curr) => ({ ...prev, ...curr }), {});
+    },
+    populate: (env: object, values: Record<string, string>) => {
+      for (const [key, val] of Object.entries(values)) {
+        env[key] = val;
+      }
+    },
+  },
 }));
 
 // Import the mocked modules
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import fs from 'fs-extra';
+import path from 'path';
 
 const mockPathExists = jest.mocked(fs.pathExists) as any;
 const mockReadFile = jest.mocked(fs.readFile) as any;
@@ -57,9 +82,9 @@ describe('prerun hook', () => {
     // Default path.resolve mock
     mockResolve.mockImplementation((...args: any[]) => args.join('/'));
 
-    // Mock console methods
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    // Mock ux console methods
+    jest.spyOn(ux, 'stdout').mockImplementation(() => {});
+    jest.spyOn(ux, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -135,6 +160,7 @@ describe('prerun hook', () => {
       const argv = ['some-command', '-e', 'custom.env'];
       mockPathExists.mockResolvedValue(true);
       mockReadFile.mockResolvedValue('TEST_VAR=test_value');
+      mockResolve.mockReturnValue('custom.env');
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -192,10 +218,8 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(console.warn).toHaveBeenCalledWith('Environment file not found: missing.env');
-      expect(console.warn).toHaveBeenCalledWith(
-        'Proceeding without loading environment variables...'
-      );
+      expect(ux.warn).toHaveBeenCalledWith('Environment file not found: missing.env');
+      expect(ux.warn).toHaveBeenCalledWith('Proceeding without loading environment variables...');
     });
 
     it('should not warn when default .env file does not exist', async () => {
@@ -204,7 +228,7 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(console.warn).not.toHaveBeenCalled();
+      expect(ux.warn).not.toHaveBeenCalled();
     });
   });
 
@@ -232,7 +256,7 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(ux.stdout).toHaveBeenCalledWith(
         expect.stringMatching(/Loading 2 environment variables from \.env:/)
       );
     });
@@ -246,7 +270,7 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(console.log).not.toHaveBeenCalled();
+      expect(ux.stdout).not.toHaveBeenCalled();
     });
 
     it('should handle empty .env file', async () => {
@@ -256,7 +280,7 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(console.log).not.toHaveBeenCalled();
+      expect(ux.stdout).not.toHaveBeenCalled();
     });
   });
 
@@ -270,7 +294,7 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(console.warn).toHaveBeenCalledWith('Failed to load .env file: Permission denied');
+      expect(ux.warn).toHaveBeenCalledWith('Failed to load .env file: Permission denied');
     });
 
     it('should handle non-Error exceptions', async () => {
@@ -281,7 +305,7 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(console.warn).toHaveBeenCalledWith('Failed to load .env file: Unknown error');
+      expect(ux.warn).toHaveBeenCalledWith('Failed to load .env file: Unknown error');
     });
   });
 

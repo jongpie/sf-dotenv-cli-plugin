@@ -2,7 +2,6 @@
 
 const { spawn } = require('child_process');
 const fs = require('fs-extra');
-const path = require('path');
 
 async function createTestEnvFile() {
   const testEnvContent = `# Test environment variables

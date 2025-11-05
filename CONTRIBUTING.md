@@ -206,6 +206,6 @@ When reporting issues:
 
 ## License
 
-By contributing to this project, you agree that your contributions will be licensed under the Apache 2.0 License.
+By contributing to this project, you agree that your contributions will be licensed under the MIT License.
 
 Thank you for contributing! 🎉

@@ -25,7 +25,7 @@ async function install() {
     // Create example .env file if it doesn't exist
     const envExamplePath = path.join(process.cwd(), 'env.example');
     const envPath = path.join(process.cwd(), '.env');
-    
+
     if (fs.existsSync(envExamplePath) && !fs.existsSync(envPath)) {
       console.log('📝 Creating example .env file...');
       fs.copyFileSync(envExamplePath, envPath);
@@ -43,11 +43,10 @@ async function install() {
     console.log('2. Test the plugin: sf dotenv --help');
     console.log('3. Try a command: sf dotenv force:org:list');
     console.log('\n📚 For more information, see README.md');
-
   } catch (error) {
     console.error('❌ Installation failed:', error.message);
     process.exit(1);
   }
 }
 
-install(); 
+install();

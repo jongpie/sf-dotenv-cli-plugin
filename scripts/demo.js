@@ -15,7 +15,7 @@ CUSTOM_VAR=demo_value
 `;
 
   const envPath = path.join(process.cwd(), '.env.demo');
-  
+
   try {
     // Write demo .env file
     fs.writeFileSync(envPath, demoEnvContent);
@@ -36,16 +36,15 @@ CUSTOM_VAR=demo_value
     console.log('\n💡 Tips:');
     console.log('- The plugin will load variables from .env.demo before running commands');
     console.log('- Variables are available as $VARIABLE_NAME in your shell');
-    console.log('- Existing environment variables won\'t be overridden');
+    console.log("- Existing environment variables won't be overridden");
     console.log('- Use --env-file to specify a different .env file');
 
     console.log('\n🧹 To clean up:');
     console.log(`   rm ${envPath}`);
-
   } catch (error) {
     console.error('❌ Demo setup failed:', error.message);
     process.exit(1);
   }
 }
 
-demo(); 
+demo();

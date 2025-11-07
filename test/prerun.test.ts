@@ -8,7 +8,7 @@ import { ux } from '@oclif/core/ux';
 import { CONFIG_SHOULD_LOG_KEY } from '../src/shared/constants.js';
 import hook from '../src/hooks/prerun.js';
 
-let shouldLogMock = jest.fn();
+const shouldLogMock = jest.fn();
 
 jest.mock('@salesforce/core', () => ({
   ConfigAggregator: {

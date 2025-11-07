@@ -1,7 +1,10 @@
 import { type Hook } from '@oclif/core/hooks';
 import { ux } from '@oclif/core';
+import { ConfigAggregator } from '@salesforce/core';
 
-import { getEnv, PLUGIN_NAME } from '../shared/index.js';
+import { CONFIG_SHOULD_LOG_KEY, getEnv, PLUGIN_NAME } from '../shared/index.js';
+
+let shouldLog = false;
 
 /**
  * Check if the hook should be skipped based on command arguments
@@ -41,6 +44,10 @@ function displayLoadingMessage(
   envFilePath: string,
   argv: string[]
 ): void {
+  if (!shouldLog) {
+    return;
+  }
+
   if (loadedCount > 0 && !argv.includes('--json')) {
     loadedVars.sort();
 
@@ -62,19 +69,27 @@ function displayLoadingMessage(
  * Handle errors during environment file loading
  */
 function handleLoadError(error: unknown): void {
-  ux.warn(`Failed to load .env file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  if (shouldLog) {
+    ux.warn(
+      `Failed to load .env file: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  }
 }
 
 /**
  * Main prerun hook function
  */
 const hook: Hook.Prerun = async function ({ Command, argv }) {
+  const configAggregator = await ConfigAggregator.create();
+  const configValue = configAggregator.getConfig()[CONFIG_SHOULD_LOG_KEY];
+  shouldLog = Boolean(configValue);
+
   if (shouldSkipHook(argv, Command.pluginName) || isDotEnvDisabled()) {
     return;
   }
 
   try {
-    const envConfig = await getEnv(argv);
+    const envConfig = await getEnv(argv, shouldLog);
 
     const { loadedCount, loadedVars } = getLoadedVariables(envConfig.env);
 

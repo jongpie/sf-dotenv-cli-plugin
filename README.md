@@ -2,6 +2,22 @@
 
 A Salesforce CLI plugin that enables loading environment variables from `.env` files when executing SF CLI commands. This plugin solves the problem of having to globally configure project-specific environment variables on your machine.
 
+## Logging Out Loaded Environment Variables
+
+If you want to see which environment variables the plugin is passing to other `sf` CLI commands, you can always run the following snippet:
+
+```bash
+$ sf config set should-log-env true
+```
+
+To disable logging, you can run either of the following:
+
+```bash
+$ sf config set should-log-env false
+# OR
+$ sf config unset should-log-env
+```
+
 ## Features
 
 - **Automatic Loading**: Automatically loads environment variables from `.env` files before any SF CLI command runs (via prerun hook)

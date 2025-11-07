@@ -46,15 +46,16 @@
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.7.2",
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
     "eslint": "^9.3.7",
     "jest": "^30.2.0",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.5",
-    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "oclif": {
     "bin": "sf",
+    "configMeta": "lib/shared/configMeta",
     "dirname": "sf",
     "topicSeparator": " ",
     "plugins": [
@@ -74,8 +75,8 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "install:dev": "node scripts/install.js",
-    "lint:fix": "eslint . --ext .ts --fix",
-    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --fix",
+    "lint": "eslint .",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "npm run compile",
     "preversion": "npm run compile",

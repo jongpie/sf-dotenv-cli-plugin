@@ -80,8 +80,15 @@ function handleLoadError(error: unknown): void {
  * Main prerun hook function
  */
 const hook: Hook.Prerun = async function ({ Command, argv }) {
-  const configAggregator = await ConfigAggregator.create();
-  const configValue = configAggregator.getConfig()[CONFIG_SHOULD_LOG_KEY];
+  const configAggregator = await ConfigAggregator.create({
+    customConfigMeta: [
+      {
+        key: CONFIG_SHOULD_LOG_KEY,
+        description: 'Whether or not to log which environment variables have been loaded',
+      },
+    ],
+  });
+  const configValue = configAggregator.getPropertyValue(CONFIG_SHOULD_LOG_KEY);
   shouldLog = Boolean(configValue);
 
   if (shouldSkipHook(argv, Command.pluginName) || isDotEnvDisabled()) {

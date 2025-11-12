@@ -14,7 +14,10 @@ jest.mock('@salesforce/core', () => ({
   ConfigAggregator: {
     create: () =>
       Promise.resolve({
-        getConfig: () => ({ [CONFIG_SHOULD_LOG_KEY]: shouldLogMock() }),
+        getPropertyValue: (key: string) => {
+          expect(key).toEqual(CONFIG_SHOULD_LOG_KEY);
+          return shouldLogMock();
+        },
       }),
   },
 }));

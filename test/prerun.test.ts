@@ -138,14 +138,16 @@ describe('prerun hook', () => {
   });
 
   describe('environment variable disabling', () => {
-    it('should return early when SF_DOTENV_DISABLED is true', async () => {
-      process.env.SF_DOTENV_DISABLED = 'true';
+    it('should default to true when SF_DOTENV_DISABLED is not set', async () => {
+      expect(process.env.SF_DOTENV_DISABLED).toBeUndefined();
       const argv = ['some-command'];
+      mockedPathExists.mockImplementation(async () => true);
+      mockedReadFile.mockImplementation(async () => 'TEST_VAR=test_value');
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(mockedPathExists).not.toHaveBeenCalled();
-      expect(mockedReadFile).not.toHaveBeenCalled();
+      expect(mockedPathExists).toHaveBeenCalled();
+      expect(mockedReadFile).toHaveBeenCalled();
     });
 
     it('should proceed when SF_DOTENV_DISABLED is not true', async () => {
@@ -157,6 +159,17 @@ describe('prerun hook', () => {
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
       expect(mockedPathExists).toHaveBeenCalled();
+      expect(mockedReadFile).toHaveBeenCalled();
+    });
+
+    it('should return early when SF_DOTENV_DISABLED is true', async () => {
+      process.env.SF_DOTENV_DISABLED = 'true';
+      const argv = ['some-command'];
+
+      await testHook({ Command: mockCommand, config: mockConfig, argv });
+
+      expect(mockedPathExists).not.toHaveBeenCalled();
+      expect(mockedReadFile).not.toHaveBeenCalled();
     });
   });
 
@@ -289,7 +302,7 @@ describe('prerun hook', () => {
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
       expect(ux.stdout).toHaveBeenCalledWith(
-        expect.stringMatching(/Loading 2 environment variables from \.env:/)
+        expect.stringMatching(/Loading 2 environment variables from file \.env:/)
       );
     });
 

@@ -4,7 +4,7 @@ import { ConfigAggregator } from '@salesforce/core';
 
 import { CONFIG_SHOULD_LOG_KEY, getEnv, PLUGIN_NAME } from '../shared/index.js';
 
-let shouldLog = false;
+let shouldLog = true;
 
 /**
  * Check if the hook should be skipped based on command arguments
@@ -53,15 +53,14 @@ function displayLoadingMessage(
 
     const delimiter = '\n  \x1b[32m✔\x1b[0m ';
 
-    ux.stdout(`\n───────── Loading Environment Variables ──────────\n`);
+    ux.stdout(`\n ────────── Loading Environment Variables ─────────\n`);
 
+    const environmentVariableLabel = `environment variable${loadedCount === 1 ? '' : 's'}`;
     ux.stdout(
-      `Loading ${loadedCount} environment variables from ${envFilePath}:${delimiter}${loadedVars.join(
+      `Loading ${loadedCount} ${environmentVariableLabel} from file ${envFilePath}:${delimiter}${loadedVars.join(
         delimiter
       )}`
     );
-
-    ux.stdout(`\n───────── End Environment Variables ──────────\n`);
   }
 }
 
@@ -89,7 +88,9 @@ const hook: Hook.Prerun = async function ({ Command, argv }) {
     ],
   });
   const configValue = configAggregator.getPropertyValue(CONFIG_SHOULD_LOG_KEY);
-  shouldLog = Boolean(configValue);
+  if (configValue !== undefined) {
+    shouldLog = Boolean(configValue);
+  }
 
   if (shouldSkipHook(argv, Command.pluginName) || isDotEnvDisabled()) {
     return;

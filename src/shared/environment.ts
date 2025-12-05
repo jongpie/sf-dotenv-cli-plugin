@@ -47,6 +47,7 @@ export const getEnv = async (argv: string[], shouldLog = false) => {
   if (!(await validateEnvFile(envFilePath, envFileIndex, shouldLog))) {
     return { envFilePath, env: {} };
   }
+  
   const actualFile = await loadEnvFile(envFilePath);
   return { envFilePath: path.relative(process.cwd(), envFilePath), env: actualFile };
 };

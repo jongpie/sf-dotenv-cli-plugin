@@ -2,7 +2,12 @@ import { type Hook } from '@oclif/core/hooks';
 import { ux } from '@oclif/core';
 import { ConfigAggregator } from '@salesforce/core';
 
-import { CONFIG_SHOULD_LOG_KEY, getEnv, PLUGIN_NAME } from '../shared/index.js';
+import {
+  CONFIG_SHOULD_LOG_KEY,
+  configMeta as customConfigMeta,
+  getEnv,
+  PLUGIN_NAME,
+} from '../shared/index.js';
 
 let shouldLog = true;
 
@@ -79,14 +84,7 @@ function handleLoadError(error: unknown): void {
  * Main prerun hook function
  */
 const hook: Hook.Prerun = async function ({ Command, argv }) {
-  const configAggregator = await ConfigAggregator.create({
-    customConfigMeta: [
-      {
-        key: CONFIG_SHOULD_LOG_KEY,
-        description: 'Whether or not to log which environment variables have been loaded',
-      },
-    ],
-  });
+  const configAggregator = await ConfigAggregator.create({ customConfigMeta });
   const configValue = configAggregator.getPropertyValue(CONFIG_SHOULD_LOG_KEY);
   if (configValue !== undefined) {
     shouldLog = Boolean(configValue);

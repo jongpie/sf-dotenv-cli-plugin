@@ -35,23 +35,23 @@
     "oclif.manifest.json"
   ],
   "dependencies": {
-    "@oclif/core": "^4.5.5",
-    "dotenv": "^17.2.3",
-    "fs-extra": "^11.3.2"
+    "@oclif/core": "4.8.3",
+    "dotenv": "17.3.1",
+    "fs-extra": "11.3.4"
   },
   "devDependencies": {
-    "@salesforce/core": "8.23.2",
+    "@salesforce/core": "8.26.3",
     "@salesforce/dev-scripts": "11.0.4",
-    "@salesforce/sf-plugins-core": "12.2.4",
-    "@types/fs-extra": "^11.0.4",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^24.7.2",
-    "@typescript-eslint/eslint-plugin": "^8.46.3",
-    "eslint": "^9.3.7",
-    "jest": "^30.2.0",
-    "prettier": "^3.6.2",
-    "ts-jest": "^29.4.5",
-    "typescript": "^5.9.3"
+    "@salesforce/sf-plugins-core": "12.2.6",
+    "@types/fs-extra": "11.0.4",
+    "@types/jest": "30.0.0",
+    "@types/node": "25.3.3",
+    "@typescript-eslint/eslint-plugin": "8.56.1",
+    "eslint": "10.0.2",
+    "jest": "30.2.0",
+    "prettier": "3.8.1",
+    "ts-jest": "29.4.6",
+    "typescript": "5.9.3"
   },
   "oclif": {
     "bin": "sf",

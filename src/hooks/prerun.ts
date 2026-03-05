@@ -5,6 +5,7 @@ import { ConfigAggregator } from '@salesforce/core';
 import {
   CONFIG_SHOULD_LOG_KEY,
   configMeta as customConfigMeta,
+  displayLoadedEnvVars,
   getEnv,
   PLUGIN_NAME,
 } from '../shared/index.js';
@@ -30,43 +31,17 @@ function isDotEnvDisabled() {
   return process.env.SF_DOTENV_DISABLED === 'true';
 }
 
-function getLoadedVariables(envConfig: Record<string, string>): {
-  loadedCount: number;
-  loadedVars: string[];
-} {
-  const loadedVars = Object.keys(envConfig);
-  const loadedCount = loadedVars.length;
-
-  return { loadedCount, loadedVars };
-}
-
 /**
- * Display the loading message with environment variables
+ * Display the loading message with environment variables (when not suppressed)
  */
 function displayLoadingMessage(
-  loadedCount: number,
-  loadedVars: string[],
-  envFilePath: string,
+  envConfig: { envFilePath: string; env: Record<string, string> },
   argv: string[]
 ): void {
-  if (!shouldLog) {
+  if (!shouldLog || argv.includes('--json')) {
     return;
   }
-
-  if (loadedCount > 0 && !argv.includes('--json')) {
-    loadedVars.sort();
-
-    const delimiter = '\n  \x1b[32m✔\x1b[0m ';
-
-    ux.stdout(`\n ────────── Loading Environment Variables ─────────\n`);
-
-    const environmentVariableLabel = `environment variable${loadedCount === 1 ? '' : 's'}`;
-    ux.stdout(
-      `Loading ${loadedCount} ${environmentVariableLabel} from file ${envFilePath}:${delimiter}${loadedVars.join(
-        delimiter
-      )}`
-    );
-  }
+  displayLoadedEnvVars(envConfig);
 }
 
 /**
@@ -96,10 +71,7 @@ const hook: Hook.Prerun = async function ({ Command, argv }) {
 
   try {
     const envConfig = await getEnv(argv, shouldLog);
-
-    const { loadedCount, loadedVars } = getLoadedVariables(envConfig.env);
-
-    displayLoadingMessage(loadedCount, loadedVars, envConfig.envFilePath, argv);
+    displayLoadingMessage(envConfig, argv);
   } catch (error) {
     handleLoadError(error);
   }

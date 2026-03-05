@@ -1,0 +1,41 @@
+import { ux } from '@oclif/core';
+
+import type { EnvConfig } from './environment.js';
+
+const CHECK = '\x1b[32m✔\x1b[0m ';
+const DELIMITER = `\n  ${CHECK}`;
+
+/** Message shown before printing env values; ux.warn() adds the "Warning:" prefix. */
+export const SENSITIVE_OUTPUT_WARNING =
+  'The following output contains sensitive information (environment variable values).';
+
+export type DisplayLoadedEnvVarsOptions = { showValues: true } | { showValues?: false };
+
+/**
+ * Display the "Loading Environment Variables" block.
+ * When showValues is false: variable names only with checkmarks (prerun and `sf dotenv` without --show-values).
+ * When showValues is true: key=value pairs with checkmarks, preceded by a security warning (all via ux).
+ */
+export function displayLoadedEnvVars(
+  envConfig: EnvConfig,
+  options?: DisplayLoadedEnvVarsOptions
+): void {
+  const loadedVars = Object.keys(envConfig.env);
+  const loadedCount = loadedVars.length;
+  if (loadedCount === 0) {
+    return;
+  }
+
+  const sorted = [...loadedVars].sort();
+  const environmentVariableLabel = `environment variable${loadedCount === 1 ? '' : 's'}`;
+  const header = `\n ────────── Loading Environment Variables ─────────\n`;
+  const loadingLine = `Loading ${loadedCount} ${environmentVariableLabel} from file ${envConfig.envFilePath}:`;
+
+  if (options?.showValues === true) {
+    ux.warn(SENSITIVE_OUTPUT_WARNING);
+    const keyValueLines = sorted.map((key) => `${key}=${envConfig.env[key]}`).join(DELIMITER);
+    ux.stdout(`${header}${loadingLine}${DELIMITER}${keyValueLines}`);
+  } else {
+    ux.stdout(`${header}${loadingLine}${DELIMITER}${sorted.join(DELIMITER)}`);
+  }
+}

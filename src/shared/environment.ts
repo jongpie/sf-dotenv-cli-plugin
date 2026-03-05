@@ -4,7 +4,11 @@ import dotenv from 'dotenv';
 import fs from 'fs-extra';
 import path from 'path';
 
-function determineEnvFilePath(argv: string[]) {
+function determineEnvFilePath(argv: string[], explicitPath?: string) {
+  if (explicitPath !== undefined) {
+    return { envFilePath: path.resolve(explicitPath), envFileIndex: -1 };
+  }
+
   // Check for --env or -e parameter in command arguments
   const envFileIndex = argv.findIndex((arg: string) => arg === '--env' || arg === '-e');
   let envFilePath = '.env';
@@ -42,12 +46,19 @@ async function loadEnvFile(envFilePath: string): Promise<Record<string, string>>
   return parsedContent;
 }
 
-export const getEnv = async (argv: string[], shouldLog = false) => {
-  const { envFilePath, envFileIndex } = determineEnvFilePath(argv);
+/** Result of loading an env file: path (relative to cwd) and parsed key-value map. */
+export type EnvConfig = { envFilePath: string; env: Record<string, string> };
+
+export const getEnv = async (
+  argv: string[],
+  shouldLog = false,
+  explicitEnvFilePath?: string
+): Promise<EnvConfig> => {
+  const { envFilePath, envFileIndex } = determineEnvFilePath(argv, explicitEnvFilePath);
   if (!(await validateEnvFile(envFilePath, envFileIndex, shouldLog))) {
-    return { envFilePath, env: {} };
+    return { envFilePath: path.relative(process.cwd(), envFilePath), env: {} };
   }
-  
+
   const actualFile = await loadEnvFile(envFilePath);
   return { envFilePath: path.relative(process.cwd(), envFilePath), env: actualFile };
 };

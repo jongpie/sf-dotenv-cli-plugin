@@ -1,0 +1,121 @@
+import { jest } from '@jest/globals';
+import { Config } from '@oclif/core';
+
+type GetEnvResult = { envFilePath: string; env: Record<string, string> };
+type ParseResult = { flags: { env: string; 'show-values': boolean } };
+const mockGetEnv = jest.fn() as jest.Mock<() => Promise<GetEnvResult>>;
+const mockDisplayLoadedEnvVars = jest.fn();
+
+jest.mock('@salesforce/sf-plugins-core', () => ({
+  SfCommand: class {
+    argv: string[] = [];
+    constructor(argv: string[], _config: unknown) {
+      this.argv = argv;
+    }
+    parse = jest.fn();
+    jsonEnabled = jest.fn().mockReturnValue(false);
+    logSensitive = jest.fn();
+  },
+  Flags: {
+    string: (opts?: { default?: string }) => opts?.default ?? '.env',
+    boolean: (opts?: { default?: boolean }) => opts?.default ?? false,
+  },
+}));
+
+jest.mock('../src/shared/index.js', () => ({
+  getEnv: (...args: unknown[]) => mockGetEnv(...args),
+  displayLoadedEnvVars: (...args: unknown[]) => mockDisplayLoadedEnvVars(...args),
+  PLUGIN_NAME: 'sf-dotenv',
+}));
+
+import DotEnv from '../src/commands/dotenv.js';
+
+describe('dotenv command', () => {
+  const mockConfig = {} as Config;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetEnv.mockResolvedValue({
+      envFilePath: '.env',
+      env: { FOO: 'bar', BAZ: 'qux' },
+    });
+  });
+
+  async function runCommand(
+    argv: string[],
+    flags: { env?: string; 'show-values'?: boolean } = {}
+  ): Promise<void> {
+    const cmd = new DotEnv(argv, mockConfig);
+    const resolvedFlags = {
+      env: flags.env ?? '.env',
+      'show-values': flags['show-values'] ?? false,
+    };
+    const mockParse = jest.fn() as jest.Mock<() => Promise<ParseResult>>;
+    mockParse.mockResolvedValue({ flags: resolvedFlags });
+    (cmd as unknown as { parse: typeof mockParse }).parse = mockParse;
+    jest.spyOn(cmd, 'jsonEnabled').mockReturnValue(false);
+    await cmd.run();
+  }
+
+  describe('getEnv integration', () => {
+    it('calls getEnv with argv, shouldLog true, and default .env when no --env flag', async () => {
+      await runCommand(['dotenv']);
+
+      expect(mockGetEnv).toHaveBeenCalledTimes(1);
+      expect(mockGetEnv).toHaveBeenCalledWith(expect.any(Array), true, '.env');
+    });
+
+    it('calls getEnv with explicit path when --env is provided', async () => {
+      await runCommand(['dotenv', '--env', '.env.staging'], {
+        env: '.env.staging',
+      });
+
+      expect(mockGetEnv).toHaveBeenCalledWith(expect.any(Array), true, '.env.staging');
+    });
+
+    it('calls getEnv with explicit path when -e is provided', async () => {
+      await runCommand(['dotenv', '-e', '.env.ci'], { env: '.env.ci' });
+
+      expect(mockGetEnv).toHaveBeenCalledWith(expect.any(Array), true, '.env.ci');
+    });
+  });
+
+  describe('displayLoadedEnvVars integration', () => {
+    it('calls displayLoadedEnvVars with showValues false when --show-values is not set', async () => {
+      await runCommand(['dotenv']);
+
+      expect(mockDisplayLoadedEnvVars).toHaveBeenCalledTimes(1);
+      expect(mockDisplayLoadedEnvVars).toHaveBeenCalledWith(
+        { envFilePath: '.env', env: { FOO: 'bar', BAZ: 'qux' } },
+        { showValues: false }
+      );
+    });
+
+    it('calls displayLoadedEnvVars with showValues true and env when --show-values is set', async () => {
+      await runCommand(['dotenv', '--show-values'], {
+        'show-values': true,
+      });
+
+      expect(mockDisplayLoadedEnvVars).toHaveBeenCalledTimes(1);
+      const call = mockDisplayLoadedEnvVars.mock.calls[0];
+      expect(call[0]).toEqual({ envFilePath: '.env', env: { FOO: 'bar', BAZ: 'qux' } });
+      expect(call[1]).toMatchObject({ showValues: true });
+    });
+  });
+
+  describe('when json is enabled', () => {
+    it('does not call displayLoadedEnvVars when jsonEnabled() returns true', async () => {
+      const cmd = new DotEnv(['dotenv'], mockConfig);
+      const mockParse = jest.fn() as jest.Mock<() => Promise<ParseResult>>;
+      mockParse.mockResolvedValue({
+        flags: { env: '.env', 'show-values': false },
+      });
+      (cmd as unknown as { parse: typeof mockParse }).parse = mockParse;
+      jest.spyOn(cmd, 'jsonEnabled').mockReturnValue(true);
+      await cmd.run();
+
+      expect(mockGetEnv).toHaveBeenCalled();
+      expect(mockDisplayLoadedEnvVars).not.toHaveBeenCalled();
+    });
+  });
+});

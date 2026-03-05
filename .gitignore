@@ -20,8 +20,10 @@ logs
 coverage/
 *.lcov
 
-# IDE files
-.vscode/
+# IDE files (project shared .vscode/settings.json and extensions.json are committed)
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo

@@ -1,0 +1,4 @@
+{
+  // Used to ensure that the VS Code extension Orta.vscode-jest correctly shows the repo's tests
+  "jest.jestCommandLine": "npx jest --runInBand"
+}

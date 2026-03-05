@@ -76,8 +76,6 @@
     "build": "tsc -p .",
     "clean": "rm -rf lib",
     "compile": "npm run clean && npm run build",
-    "demo:env-file": "node scripts/demo-env-file.js",
-    "demo": "node scripts/demo.js",
     "prettier:verify": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "lint:fix": "eslint . --fix",

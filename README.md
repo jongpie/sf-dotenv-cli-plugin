@@ -1,248 +1,158 @@
-# Salesforce CLI Dotenv Plugin
+# Salesforce CLI DotEnv Plugin
 
-A Salesforce CLI plugin that enables loading environment variables from `.env` files when executing SF CLI commands. This plugin solves the problem of having to globally configure project-specific environment variables on your machine.
+A Salesforce CLI plugin that loads environment variables from `.env` files when you run `sf` commands. No need to export project-specific vars in your shell or OS.
 
-## Logging Out Loaded Environment Variables
+## What It Does
 
-If you want to see which environment variables the plugin is passing to other `sf` CLI commands, you can always run the following snippet:
+- **Automatic loading**: A prerun hook loads a `.env` file (by default `.env` in the current directory) before every `sf` command. Existing environment variables are not overridden.
+- **Per-command file**: Use `--env` or `-e` with any command to load a specific file, e.g. `sf --env .env.prod project deploy start`.
+- **Inspect loaded vars**: Run `sf dotenv` to see which variables are loaded from `.env`; use `sf dotenv --show-values` to print names and values (with a security warning).
 
-```bash
-$ sf config set should-log-env true
-```
-
-To disable logging, you can run either of the following:
-
-```bash
-$ sf config set should-log-env false
-# OR
-$ sf config unset should-log-env
-```
-
-## Features
-
-- **Automatic Loading**: Automatically loads environment variables from `.env` files before any SF CLI command runs (via prerun hook)
-- **--env Parameter**: Add `--env` or `-e` to any SF CLI command to load environment variables from a specific file
-- **Manual Command**: Execute SF CLI commands with `.env` file support using the `sf dotenv` command
-- **Custom .env File Paths**: Support for custom `.env` file paths via command flags or environment variables
-- **Environment Variable Priority**: Preserve existing environment variables (won't override if already set)
-- **Seamless Integration**: Works with all SF CLI commands and flags
-- **Debug Support**: Enable debug mode to see detailed loading information
-
-## Installation
-
-### Global Installation
-
-```bash
-npm install -g @salesforce/plugin-dotenv
-```
-
-### Local Development Installation
-
-```bash
-git clone https://github.com/yourusername/sf-dotenv-cli-plugin.git
-cd sf-dotenv-cli-plugin
-npm install
-npm run compile
-npm link
-```
-
-## Usage
-
-### Automatic Loading (Recommended)
-
-The plugin automatically loads environment variables from `.env` files before any SF CLI command runs. Simply create a `.env` file in your project root and run any SF CLI command:
-
-```bash
-# Create .env file with your variables
-echo "SF_TARGET_ORG=my-org@example.com" > .env
-echo "DEPLOYMENT_PATH=force-app/main/default" >> .env
-
-# Run any SF CLI command - variables are loaded automatically
-sf force:org:list
-sf force:source:deploy --source-dir $DEPLOYMENT_PATH
-```
-
-### Manual Command Usage
-
-You can also use the `sf dotenv` command to explicitly load environment variables:
-
-```bash
-# Execute any SF CLI command with .env file support
-sf dotenv force:org:list
-sf dotenv force:org:display --target-org my-org
-sf dotenv force:source:deploy --source-dir force-app/main/default
-```
-
-### Custom .env File
-
-#### Using the Manual Command
-
-```bash
-# Use a specific .env file
-sf dotenv --env .env.local force:org:list
-sf dotenv -e .env.production project deploy start
-sf dotenv --env config/production.env force:source:deploy
-```
-
-#### Using --env Parameter with Any Command (New!)
-
-You can now add `--env` or `-e` to any SF CLI command to load environment variables from a specific file:
-
-```bash
-# Use --env with any command
-sf --env .env.local force:org:list
-sf --env .env.production project deploy start
-sf -e config/staging.env force:source:deploy --source-dir force-app/main/default
-```
-
-#### Using Environment Variables (for Automatic Loading)
-
-```bash
-# Set custom .env file path
-export SF_DOTENV_FILE=.env.local
-sf force:org:list
-
-# Or set it for a single command
-SF_DOTENV_FILE=.env.production sf force:source:deploy
-```
-
-### Environment Variables in .env File
+## Quick Start
 
 Create a `.env` file in your project root:
 
-```env
-# Salesforce Org Configuration
-SF_TARGET_ORG=my-org@example.com
-SF_INSTANCE_URL=https://login.salesforce.com
-
-# API Configuration
-SF_CLIENT_ID=your_client_id
-SF_CLIENT_SECRET=your_client_secret
-
-# Custom Variables
-DEPLOYMENT_PATH=force-app/main/default
-TEST_LEVEL=RunSpecifiedTests
+```bash
+FOO=123
+BAR=some other value
 ```
 
-## Examples
+Run any `sf` command; the plugin loads `.env` automatically. In this example of deploying Apex classes, the names of the loaded environment variables are displayed before the command executes.
 
-### Deploy with Environment Variables
+<img src="./images/prerun-hook-example-deploy-command-output.png" width="500"  alt="Environment Variables Automatically Loaded During Apex Class Deployment">
+
+## Installation
 
 ```bash
-# .env file contains: DEPLOYMENT_PATH=force-app/main/default
-sf dotenv force:source:deploy --source-dir $DEPLOYMENT_PATH
-# Or use the new --env parameter
-sf --env .env.production project deploy start
+sf plugins install @jongpie/sf-dotenv-cli-plugin
 ```
 
-### Run Tests with Custom Configuration
+**Unsigned plugin**: This is a community plugin, so the CLI may prompt you to confirm installation. In CI/CD or non-interactive use, add the plugin to the CLI allowlist so it installs without a prompt:
+
+| Platform    | AllowList Path                                          |
+| ----------- | ------------------------------------------------------- |
+| Linux/macOS | `$HOME/.config/sf/unsignedPluginAllowList.json`         |
+| Windows     | `%USERPROFILE%\.config\sf\unsignedPluginAllowList.json` |
+
+Example allowlist (array of package names):
+
+```json
+["@jongpie/sf-dotenv-cli-plugin"]
+```
+
+## Usage: Automatically Load `.env` Files with Any SF CLI Commands
+
+**Automatic**: With a `.env` in your project root & the plugin installed, just run a `sf` command. Variables are loaded before the command runs.
+
+**Specific file**: Pass the path of a specific `.env` file to load to the parameter `--env`
 
 ```bash
-# .env file contains: TEST_LEVEL=RunSpecifiedTests
-sf dotenv force:apex:test:run --test-level $TEST_LEVEL
-# Or use the shorthand
-sf -e .env.test force:apex:test:run --test-level $TEST_LEVEL
+sf org list --env .env.local
+sf project deploy start --env .env.production
 ```
 
-### Connect to Different Orgs
+### Using with `sf` CLI's Deployment String Replacements
+
+The Salesforce CLI can [replace placeholders in metadata with environment variables](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_string_replace.htm) during deployment. You define replacements in `sfdx-project.json` (e.g. `replaceWithEnv` pointing at an env var name), and the CLI substitutes those variables when you deploy. This plugin pairs well with that feature: put the replacement values in a `.env` file and they’re loaded automatically before `sf project deploy start` (or `sf deploy metadata`), so the CLI sees the variables without you exporting them in the shell.
+
+**Example:** In `sfdx-project.json` you configure a replacement that uses the env var `NAMED_CREDENTIAL_URL`:
+
+```json
+{
+  "name": "My Salesforce Project",
+  "packageDirectories": [
+    {
+      "path": "force-app",
+      "default": true
+    }
+  ],
+  "replacements": [
+    {
+      "filename": "force-app/main/default/namedCredentials/My_Named_Credential.namedCredential-meta.xml",
+      "stringToReplace": "https://placeholder.example.com",
+      "replaceWithEnv": "NAMED_CREDENTIAL_URL"
+    }
+  ]
+}
+```
+
+In your `.env`, add the environment variable value for `NAMED_CREDENTIAL_URL`:
 
 ```bash
-# .env file contains: SF_TARGET_ORG=dev-org@example.com
-sf dotenv force:org:display --target-org $SF_TARGET_ORG
-# Or use the new --env parameter
-sf --env .env.dev force:org:display --target-org $SF_TARGET_ORG
+NAMED_CREDENTIAL_URL=https://api.my-org.example.com
 ```
 
-## How It Works
-
-1. The plugin reads the specified `.env` file (defaults to `.env` in the current directory)
-2. It loads all environment variables from the file into the current process
-3. It preserves any existing environment variables (won't override if already set)
-4. It executes the specified SF CLI command with the loaded environment variables
-5. The command runs exactly as if you had set the environment variables manually
-
-## Configuration
-
-### Environment Variables
-
-The plugin supports several environment variables for configuration:
-
-- `SF_DOTENV_FILE`: Path to the `.env` file to load (defaults to `.env` in current directory)
-- `SF_DOTENV_DISABLED`: Set to `true` to disable automatic loading
-- `SF_DOTENV_DEBUG`: Set to `true` to enable debug mode and see detailed loading information
-
-### Examples
+Then run your deploy as usual; the plugin loads `.env` before the command, and the CLI performs the replacement:
 
 ```bash
-# Use a custom .env file
-export SF_DOTENV_FILE=.env.production
-sf force:org:list
-
-# Disable automatic loading
-export SF_DOTENV_DISABLED=true
-sf force:org:list
-
-# Enable debug mode
-export SF_DOTENV_DEBUG=true
-sf force:org:list
+sf project deploy start --source-dir force-app
 ```
 
-## Environment Variable Priority
+For different environments, use a separate env file and pass it to the command:
 
-The plugin follows this priority order for environment variables:
+```bash
+sf project deploy start --source-dir force-app -e .env.production
+```
 
-1. Already set environment variables (highest priority)
+## Usage: Debug & Test with `sf dotenv` Command
+
+**Inspect**: The plugin is primarily focused on automatically running during any `sf` CLI command. But to aid with debugging & testing, you can run the command `sf dotenv` to see how your `.env` files are being loaded
+
+To see the names of environment variables being loaded, simply run the command:
+
+```bash
+sf dotenv
+```
+
+This will attempt to load a `.env` file, and displays the names of any variables loaded:
+
+<img src="./images/dotenv-command-default-output.png" width="500"  alt="Environment Variables Names Displayed">
+
+> [!WARNING]
+> If you want to see the names _and_ values, pass the flag `--show-values`. But doing so will display potentially sensitive values, so use this with caution.
+
+```bash
+sf dotenv --env .env.staging --show-values
+```
+
+<img src="./images/dotenv-command-show-values-output.png" width="1000"  alt="Environment Variables Names & Values Displayed">
+
+More details about this command (shown below) can be seen by running `sf dotenv --help` or `sf dotenv -h`.
+
+```bash
+USAGE
+  $ sf dotenv [--json] [--flags-dir <value>] [-e <value>] [--show-values]
+
+FLAGS
+  -e, --env=<value>  [default: .env] Path to the .env file to load.
+      --show-values  Print the loaded environment variable names and values.
+
+GLOBAL FLAGS
+  --flags-dir=<value>  Import flag values from a directory.
+  --json               Format output as json.
+```
+
+<!-- TODO add more details about configuration options for the plugin  -->
+<!-- ## Configuration
+
+- **Logging**: By default, the plugin logs the _names_ of loaded variables before each command. To turn this off:
+
+  ```bash
+  sf config set should-log-env false
+  ```
+
+  To turn it back on: `sf config set should-log-env true`.
+
+**Environment variables**:
+
+- `SF_DOTENV_FILE` – path to the `.env` file used by automatic loading (default: `.env` in current directory).
+- `SF_DOTENV_DISABLED` – set to `true` to disable automatic loading.
+
+
+## Variable priority
+
+1. Already set environment variables (highest)
 2. Variables from the `.env` file
-3. System default environment variables (lowest priority)
+3. System defaults (lowest)
 
-This means that if an environment variable is already set in your shell, it won't be overridden by the `.env` file.
-
-## Development
-
-### Building the Plugin
-
-```bash
-npm run compile
-```
-
-### Running Tests
-
-```bash
-npm test
-```
-
-### Linting
-
-```bash
-npm run lint
-npm run lint:fix
-```
-
-### Formatting
-
-```bash
-npm run format
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Run the test suite
-6. Submit a pull request
-
-## License
-
-Apache-2.0
-
-## Support
-
-- [GitHub Issues](https://github.com/yourusername/sf-dotenv-cli-plugin/issues)
-- [Documentation](https://github.com/yourusername/sf-dotenv-cli-plugin#readme)
-
-## Related
-
-- [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli)
-- [dotenv package](https://www.npmjs.com/package/dotenv)
+So anything already set in your shell is left unchanged. -->

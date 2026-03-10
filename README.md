@@ -4,7 +4,7 @@ A Salesforce CLI plugin that loads environment variables from `.env` files when 
 
 ## What It Does
 
-- **Automatic loading**: A prerun hook loads a `.env` file (by default `.env` in the current directory) before every `sf` command. Existing environment variables are not overridden.
+- **Automatic loading**: A prerun hook loads a `.env` file (by default `.env` in the current directory) before every `sf` command. Values from the `.env` file override existing environment variables of the same name; variables not defined in the file are left unchanged.
 - **Per-command file**: Use `--env` or `-e` with any command to load a specific file, e.g. `sf --env .env.prod project deploy start`.
 - **Inspect loaded vars**: Run `sf dotenv` to see which variables are loaded from `.env`; use `sf dotenv --show-values` to print names and values (with a security warning).
 
@@ -17,7 +17,7 @@ FOO=123
 BAR=some other value
 ```
 
-Run any `sf` command; the plugin loads `.env` automatically. In this example of deploying Apex classes, the names of the loaded environment variables are displayed before the command executes.
+Run any `sf` command, and the plugin automatically loads the file `.env` (if it exists). In this example of deploying Apex classes, the names of the loaded environment variables are displayed before the command executes.
 
 <img src="./images/prerun-hook-example-deploy-command-output.png" width="500"  alt="Environment Variables Automatically Loaded During Apex Class Deployment">
 
@@ -40,7 +40,7 @@ Example allowlist (array of package names):
 ["@jongpie/sf-dotenv-cli-plugin"]
 ```
 
-## Usage: Automatically Load `.env` Files with Any SF CLI Commands
+## Usage: Automatically Load `.env` Files with Any `sf` CLI Commands
 
 **Automatic**: With a `.env` in your project root & the plugin installed, just run a `sf` command. Variables are loaded before the command runs.
 
@@ -132,27 +132,17 @@ GLOBAL FLAGS
   --json               Format output as json.
 ```
 
-<!-- TODO add more details about configuration options for the plugin  -->
-<!-- ## Configuration
+## Configuration
 
-- **Logging**: By default, the plugin logs the _names_ of loaded variables before each command. To turn this off:
+- **Logging**: By default, the plugin logs the _names_ of loaded variables before each command. To turn this off, run:
 
   ```bash
   sf config set should-log-env false
   ```
 
-  To turn it back on: `sf config set should-log-env true`.
+  You can also change this setting globally by adding the flag `--global`. To re-enable logging, run: `sf config set should-log-env true`.
 
-**Environment variables**:
+- **Plugin-Specific Environment Variables**: Some features can be controlled are a few environment variables you can set in your system to change
 
-- `SF_DOTENV_FILE` – path to the `.env` file used by automatic loading (default: `.env` in current directory).
 - `SF_DOTENV_DISABLED` – set to `true` to disable automatic loading.
-
-
-## Variable priority
-
-1. Already set environment variables (highest)
-2. Variables from the `.env` file
-3. System defaults (lowest)
-
-So anything already set in your shell is left unchanged. -->
+- `SF_DOTENV_FILE` – path to the `.env` file used by automatic loading (default: `.env` in current directory).

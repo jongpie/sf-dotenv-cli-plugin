@@ -34,8 +34,20 @@ jest.mock('dotenv', () => ({
       }
       return result;
     },
-    populate: (_env: Record<string, string>, values: Record<string, string>) => {
-      Object.assign(_env, values);
+    // Mimics dotenv.populate():
+    //    - When override is true: it overwrites existing keys
+    //    - When override is false: leave existing keys unchanged
+    populate: (
+      env: Record<string, string>,
+      values: Record<string, string>,
+      options: { override?: boolean } = {}
+    ) => {
+      const shouldOverrideExistingValue = Boolean(options?.override);
+      for (const key of Object.keys(values)) {
+        if (Object.prototype.hasOwnProperty.call(env, key) || !shouldOverrideExistingValue) {
+          env[key] = values[key];
+        }
+      }
     },
   },
 }));

@@ -5,6 +5,7 @@ import path from 'path';
 import { Config } from '@oclif/core';
 import { ux } from '@oclif/core/ux';
 
+import dotenv from 'dotenv';
 import { CONFIG_SHOULD_LOG_KEY } from '../src/shared/constants.js';
 import hook from '../src/hooks/prerun.js';
 
@@ -36,6 +37,22 @@ jest.mock('path', () => ({
   },
 }));
 
+// Mimics dotenv.populate: when override is true, overwrite existing keys; when false, leave existing keys unchanged.
+const dotenvPopulateImpl = (
+  env: Record<string, string>,
+  values: Record<string, string>,
+  options: { override?: boolean } = {}
+) => {
+  const override = Boolean(options?.override);
+  for (const key of Object.keys(values)) {
+    if (Object.prototype.hasOwnProperty.call(env, key)) {
+      if (override) env[key] = values[key];
+    } else {
+      env[key] = values[key];
+    }
+  }
+};
+
 jest.mock('dotenv', () => ({
   default: {
     parse: (val: string) => {
@@ -47,11 +64,13 @@ jest.mock('dotenv', () => ({
         })
         .reduce((prev, curr) => ({ ...prev, ...curr }), {});
     },
-    populate: (env: Record<string, string>, values: Record<string, string>) => {
-      for (const [key, val] of Object.entries(values)) {
-        env[key] = val;
-      }
-    },
+    populate: jest.fn(
+      (
+        env: Record<string, string>,
+        values: Record<string, string>,
+        options?: { override?: boolean }
+      ) => dotenvPopulateImpl(env, values, options ?? {})
+    ),
   },
 }));
 
@@ -334,7 +353,21 @@ describe('prerun hook', () => {
   });
 
   describe('environment variable precedence', () => {
-    it('should override existing environment variables', async () => {
+    it('should call dotenv.populate with override==true so .env file values take precedence', async () => {
+      const argv = ['some-command'];
+      mockedPathExists.mockImplementation(async () => true);
+      mockedReadFile.mockResolvedValue('FOO=bar');
+
+      await testHook({ Command: mockCommand, config: mockConfig, argv });
+
+      expect(dotenv.populate).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ FOO: 'bar' }),
+        { override: true }
+      );
+    });
+
+    it('should override existing environment variables with values from .env file', async () => {
       process.env.EXISTING_VAR = 'existing_value';
       const argv = ['some-command'];
       const envContent = 'EXISTING_VAR=new_value\nNEW_VAR=new_value';
@@ -345,6 +378,34 @@ describe('prerun hook', () => {
 
       expect(process.env.EXISTING_VAR).toBe('new_value');
       expect(process.env.NEW_VAR).toBe('new_value');
+    });
+
+    it('should leave variables not in .env file unchanged', async () => {
+      process.env.NOT_IN_ENV_FILE = 'unchanged_value';
+      const argv = ['some-command'];
+      const envContent = 'ONLY_IN_FILE=from_file';
+      mockedPathExists.mockImplementation(async () => true);
+      mockedReadFile.mockResolvedValue(envContent);
+
+      await testHook({ Command: mockCommand, config: mockConfig, argv });
+
+      expect(process.env.NOT_IN_ENV_FILE).toBe('unchanged_value');
+      expect(process.env.ONLY_IN_FILE).toBe('from_file');
+    });
+
+    it('should override only variables that appear in .env file', async () => {
+      process.env.OVERWRITE_ME = 'old';
+      process.env.LEAVE_ME_ALONE = 'original';
+      const argv = ['some-command'];
+      const envContent = 'OVERWRITE_ME=new\nANOTHER_NEW=value';
+      mockedPathExists.mockImplementation(async () => true);
+      mockedReadFile.mockResolvedValue(envContent);
+
+      await testHook({ Command: mockCommand, config: mockConfig, argv });
+
+      expect(process.env.OVERWRITE_ME).toBe('new');
+      expect(process.env.LEAVE_ME_ALONE).toBe('original');
+      expect(process.env.ANOTHER_NEW).toBe('value');
     });
   });
 });

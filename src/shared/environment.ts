@@ -42,7 +42,7 @@ async function validateEnvFile(
 async function loadEnvFile(envFilePath: string): Promise<Record<string, string>> {
   const fileContent = await fs.readFile(envFilePath, 'utf8');
   const parsedContent = dotenv.parse(fileContent);
-  dotenv.populate(process.env as Record<string, string>, parsedContent);
+  dotenv.populate(process.env as Record<string, string>, parsedContent, { override: true });
   return parsedContent;
 }
 

@@ -2,7 +2,15 @@ name: Build
 
 on:
   pull_request:
-    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - 'README.md'
+      - 'Contributing.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.npmrc'
+      - '.prettierrc'
 
 jobs:
   build:

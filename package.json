@@ -48,7 +48,6 @@
     "@types/fs-extra": "11.0.4",
     "@types/jest": "30.0.0",
     "@types/node": "25.3.3",
-    "@typescript-eslint/eslint-plugin": "8.56.1",
     "eslint": "10.0.2",
     "globals": "15.14.0",
     "husky": "9.1.7",
@@ -56,7 +55,8 @@
     "lint-staged": "15.4.3",
     "prettier": "3.8.1",
     "ts-jest": "29.4.6",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.57.0"
   },
   "oclif": {
     "bin": "sf",
@@ -79,7 +79,7 @@
     "prettier:verify": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "lint:fix": "eslint . --fix",
-    "lint:verify": "eslint .",
+    "lint:verify": "eslint . --config eslint.config.js",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "npm run compile",
     "preversion": "npm run compile",

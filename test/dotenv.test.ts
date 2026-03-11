@@ -3,13 +3,13 @@ import { Config } from '@oclif/core';
 
 type GetEnvResult = { envFilePath: string; env: Record<string, string> };
 type ParseResult = { flags: { env: string; 'show-values': boolean } };
-const mockGetEnv = jest.fn() as jest.Mock<() => Promise<GetEnvResult>>;
+const mockGetEnv = jest.fn() as jest.Mock<(...args: unknown[]) => Promise<GetEnvResult>>;
 const mockDisplayLoadedEnvVars = jest.fn();
 
 jest.mock('@salesforce/sf-plugins-core', () => ({
   SfCommand: class {
     argv: string[] = [];
-    constructor(argv: string[], _config: unknown) {
+    constructor(argv: string[]) {
       this.argv = argv;
     }
     parse = jest.fn();
@@ -66,17 +66,21 @@ describe('dotenv command', () => {
     });
 
     it('calls getEnv with explicit path when --env is provided', async () => {
+      const args = ['dotenv', '--env', '.env.staging'];
+
       await runCommand(['dotenv', '--env', '.env.staging'], {
         env: '.env.staging',
       });
 
-      expect(mockGetEnv).toHaveBeenCalledWith(expect.any(Array), true, '.env.staging');
+      expect(mockGetEnv).toHaveBeenCalledWith(args, true, '.env.staging');
     });
 
     it('calls getEnv with explicit path when -e is provided', async () => {
-      await runCommand(['dotenv', '-e', '.env.ci'], { env: '.env.ci' });
+      const args = ['dotenv', '-e', '.env.ci'];
 
-      expect(mockGetEnv).toHaveBeenCalledWith(expect.any(Array), true, '.env.ci');
+      await runCommand(args, { env: '.env.ci' });
+
+      expect(mockGetEnv).toHaveBeenCalledWith(args, true, '.env.ci');
     });
   });
 

@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { getEnv } from '../../src/shared/environment.js';
+import { DEFAULT_ENV_PATH, getEnv } from '../../src/shared/index.js';
 
 jest.mock('@oclif/core/ux', () => ({
   ux: {
@@ -92,7 +92,7 @@ describe('getEnv (shared/environment)', () => {
 
       const result = await getEnv(['some', 'command'], false);
 
-      expect(result.envFilePath).toBe('.env');
+      expect(result.envFilePath).toBe(DEFAULT_ENV_PATH);
       expect(result.env).toEqual({ X: 'y' });
     });
 
@@ -163,12 +163,12 @@ describe('getEnv (shared/environment)', () => {
     it('returns parsed env and relative path', async () => {
       mockedPathExists.mockResolvedValue(true);
       mockedReadFile.mockResolvedValue('ALPHA=one\nBETA=two');
-      mockedRelative.mockReturnValue('.env');
+      mockedRelative.mockReturnValue(DEFAULT_ENV_PATH);
 
       const result = await getEnv([], false, 'some/.env');
 
       expect(result.env).toEqual({ ALPHA: 'one', BETA: 'two' });
-      expect(result.envFilePath).toBe('.env');
+      expect(result.envFilePath).toBe(DEFAULT_ENV_PATH);
     });
   });
 });

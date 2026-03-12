@@ -9,7 +9,9 @@ const DELIMITER = `\n  ${CHECK}`;
 export const SENSITIVE_OUTPUT_WARNING =
   'The following output contains sensitive information (environment variable values).';
 
-export type DisplayLoadedEnvVarsOptions = { showValues: true } | { showValues?: false };
+interface DisplayLoadedEnvVarsOptions {
+  showValues: boolean;
+}
 
 /**
  * Display the "Loading Environment Variables" block.
@@ -18,7 +20,7 @@ export type DisplayLoadedEnvVarsOptions = { showValues: true } | { showValues?: 
  */
 export function displayLoadedEnvVars(
   envConfig: EnvConfig,
-  options?: DisplayLoadedEnvVarsOptions
+  options: DisplayLoadedEnvVarsOptions
 ): void {
   const loadedVars = Object.keys(envConfig.env);
   const loadedCount = loadedVars.length;
@@ -30,12 +32,11 @@ export function displayLoadedEnvVars(
   const environmentVariableLabel = `environment variable${loadedCount === 1 ? '' : 's'}`;
   const header = `\n ────────── Loading Environment Variables ─────────\n`;
   const loadingLine = `Loading ${loadedCount} ${environmentVariableLabel} from file ${envConfig.envFilePath}:`;
+  let printedMessage = sorted.join(DELIMITER);
 
-  if (options?.showValues === true) {
+  if (options.showValues) {
     ux.warn(SENSITIVE_OUTPUT_WARNING);
-    const keyValueLines = sorted.map((key) => `${key}=${envConfig.env[key]}`).join(DELIMITER);
-    ux.stdout(`${header}${loadingLine}${DELIMITER}${keyValueLines}`);
-  } else {
-    ux.stdout(`${header}${loadingLine}${DELIMITER}${sorted.join(DELIMITER)}`);
+    printedMessage = sorted.map((key) => `${key}=${envConfig.env[key]}`).join(DELIMITER);
   }
+  ux.stdout(`${header}${loadingLine}${DELIMITER}${printedMessage}`);
 }

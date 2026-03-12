@@ -6,7 +6,7 @@ import { Config } from '@oclif/core';
 import { ux } from '@oclif/core/ux';
 
 import dotenv from 'dotenv';
-import { CONFIG_SHOULD_LOG_KEY } from '../src/shared/constants.js';
+import { DEFAULT_ENV_PATH, CONFIG_SHOULD_LOG_KEY } from '../src/shared/constants.js';
 import hook from '../src/hooks/prerun.js';
 
 const shouldLogMock = jest.fn();
@@ -100,7 +100,7 @@ const testHook = async (params: { Command: Command.Class; config: Config; argv: 
 
 describe('prerun hook', () => {
   const ORIGINAL_ENV = Object.freeze({ ...process.env });
-  const mockConfig = {} as Config;
+  const mockConfig = { 'should-log-env': 'true' } as unknown as Config;
   const mockCommand = {} as Command.Class;
   const mockLogger = () => {
     // don't pipe to stdout and clog up the terminal
@@ -113,6 +113,7 @@ describe('prerun hook', () => {
     jest.clearAllMocks();
     // Default path.resolve mock
     mockedResolve.mockImplementation((...args: string[]) => args.join('/'));
+    shouldLogMock.mockReturnValue('true');
     // Mock ux console methods
     jest.spyOn(ux, 'stdout').mockImplementation(mockLogger);
     jest.spyOn(ux, 'warn').mockImplementation(mockLogger);
@@ -226,8 +227,8 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(mockedResolve).toHaveBeenCalledWith('.env');
-      expect(mockedPathExists).toHaveBeenCalledWith('.env');
+      expect(mockedResolve).toHaveBeenCalledWith(DEFAULT_ENV_PATH);
+      expect(mockedPathExists).toHaveBeenCalledWith(DEFAULT_ENV_PATH);
     });
 
     it('should remove --env parameter and its value from argv', async () => {
@@ -252,7 +253,6 @@ describe('prerun hook', () => {
     });
 
     it('should warn when custom env file does not exist', async () => {
-      shouldLogMock.mockImplementation(() => true);
       const argv = ['some-command', '--env', 'missing.env'];
       mockedPathExists.mockImplementation(async () => false);
 
@@ -263,7 +263,7 @@ describe('prerun hook', () => {
     });
 
     it('should not warn when custom env file does not exist and logging disabled', async () => {
-      shouldLogMock.mockImplementation(() => false);
+      shouldLogMock.mockReturnValue(undefined);
       const argv = ['some-command', '--env', 'missing.env'];
       mockedPathExists.mockImplementation(async () => false);
 
@@ -273,7 +273,6 @@ describe('prerun hook', () => {
     });
 
     it('should not warn when default .env file does not exist', async () => {
-      shouldLogMock.mockImplementation(() => true);
       const argv = ['some-command'];
       mockedPathExists.mockImplementation(async () => false);
 
@@ -301,7 +300,7 @@ describe('prerun hook', () => {
       const envContent = 'TEST_VAR=test_value\nANOTHER_VAR=another_value';
       mockedPathExists.mockImplementation(async () => true);
       mockedReadFile.mockResolvedValue(envContent);
-      mockedRelative.mockReturnValue('.env');
+      mockedRelative.mockReturnValue(DEFAULT_ENV_PATH);
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 

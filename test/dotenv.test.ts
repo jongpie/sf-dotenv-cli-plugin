@@ -1,6 +1,8 @@
 import { jest } from '@jest/globals';
 import { Config } from '@oclif/core';
 
+import { DEFAULT_ENV_PATH } from '../src/shared/index.js';
+
 interface GetEnvResult {
   envFilePath: string;
   env: Record<string, string>;
@@ -24,7 +26,7 @@ jest.mock('@salesforce/sf-plugins-core', () => ({
     logSensitive = jest.fn();
   },
   Flags: {
-    string: (opts?: { default?: string }) => opts?.default ?? '.env',
+    string: (opts?: { default?: string }) => opts?.default ?? DEFAULT_ENV_PATH,
     boolean: (opts?: { default?: boolean }) => opts?.default ?? false,
   },
 }));
@@ -43,7 +45,7 @@ describe('dotenv command', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetEnv.mockResolvedValue({
-      envFilePath: '.env',
+      envFilePath: DEFAULT_ENV_PATH,
       env: { FOO: 'bar', BAZ: 'qux' },
     });
   });
@@ -54,7 +56,7 @@ describe('dotenv command', () => {
   ): Promise<void> {
     const cmd = new DotEnv(argv, mockConfig);
     const resolvedFlags = {
-      env: flags.env ?? '.env',
+      env: flags.env ?? DEFAULT_ENV_PATH,
       'show-values': flags['show-values'] ?? false,
     };
     const mockParse = jest.fn() as jest.Mock<() => Promise<ParseResult>>;
@@ -69,7 +71,7 @@ describe('dotenv command', () => {
       await runCommand(['dotenv']);
 
       expect(mockGetEnv).toHaveBeenCalledTimes(1);
-      expect(mockGetEnv).toHaveBeenCalledWith(expect.any(Array), true, '.env');
+      expect(mockGetEnv).toHaveBeenCalledWith(expect.any(Array), true, DEFAULT_ENV_PATH);
     });
 
     it('calls getEnv with explicit path when --env is provided', async () => {
@@ -97,7 +99,7 @@ describe('dotenv command', () => {
 
       expect(mockDisplayLoadedEnvVars).toHaveBeenCalledTimes(1);
       expect(mockDisplayLoadedEnvVars).toHaveBeenCalledWith(
-        { envFilePath: '.env', env: { FOO: 'bar', BAZ: 'qux' } },
+        { envFilePath: DEFAULT_ENV_PATH, env: { FOO: 'bar', BAZ: 'qux' } },
         { showValues: false }
       );
     });
@@ -109,7 +111,7 @@ describe('dotenv command', () => {
 
       expect(mockDisplayLoadedEnvVars).toHaveBeenCalledTimes(1);
       const call = mockDisplayLoadedEnvVars.mock.calls[0];
-      expect(call[0]).toEqual({ envFilePath: '.env', env: { FOO: 'bar', BAZ: 'qux' } });
+      expect(call[0]).toEqual({ envFilePath: DEFAULT_ENV_PATH, env: { FOO: 'bar', BAZ: 'qux' } });
       expect(call[1]).toMatchObject({ showValues: true });
     });
   });
@@ -119,7 +121,7 @@ describe('dotenv command', () => {
       const cmd = new DotEnv(['dotenv'], mockConfig);
       const mockParse = jest.fn() as jest.Mock<() => Promise<ParseResult>>;
       mockParse.mockResolvedValue({
-        flags: { env: '.env', 'show-values': false },
+        flags: { env: DEFAULT_ENV_PATH, 'show-values': false },
       });
       (cmd as unknown as { parse: typeof mockParse }).parse = mockParse;
       jest.spyOn(cmd, 'jsonEnabled').mockReturnValue(true);

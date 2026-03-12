@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import fs from 'fs-extra';
 import path from 'path';
 
+import { DEFAULT_ENV_PATH } from '../shared/index.js';
+
 function determineEnvFilePath(argv: string[], explicitPath?: string) {
   if (explicitPath !== undefined) {
     return { envFilePath: path.resolve(explicitPath), envFileIndex: -1 };
@@ -11,7 +13,7 @@ function determineEnvFilePath(argv: string[], explicitPath?: string) {
 
   // Check for --env or -e parameter in command arguments
   const envFileIndex = argv.findIndex((arg: string) => arg === '--env' || arg === '-e');
-  let envFilePath = '.env';
+  let envFilePath = DEFAULT_ENV_PATH;
 
   if (envFileIndex !== -1 && envFileIndex + 1 < argv.length) {
     envFilePath = argv[envFileIndex + 1];

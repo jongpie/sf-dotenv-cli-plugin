@@ -41,7 +41,7 @@ function displayLoadingMessage(
   if (!shouldLog || argv.includes('--json')) {
     return;
   }
-  displayLoadedEnvVars(envConfig);
+  displayLoadedEnvVars(envConfig, { showValues: shouldLog });
 }
 
 /**
@@ -60,10 +60,12 @@ function handleLoadError(error: unknown): void {
  */
 const hook: Hook.Prerun = async function ({ Command, argv }) {
   const configAggregator = await ConfigAggregator.create({ customConfigMeta });
-  const configValue = configAggregator.getPropertyValue(CONFIG_SHOULD_LOG_KEY);
-  if (configValue !== undefined) {
-    shouldLog = Boolean(configValue);
-  }
+  const possibleConfigLoggingValue = configAggregator.getPropertyValue(CONFIG_SHOULD_LOG_KEY) as
+    | undefined
+    | 'true'
+    | 'false';
+
+  shouldLog = Boolean(possibleConfigLoggingValue === 'true' ? 1 : 0);
 
   if (shouldSkipHook(argv, Command.pluginName) || isDotEnvDisabled()) {
     return;

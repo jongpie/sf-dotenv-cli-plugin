@@ -38,6 +38,15 @@ async function validateEnvFile(
     }
     return false;
   }
+  const stat = await fs.stat(envFilePath);
+  if (!stat.isFile()) {
+    if (shouldLog) {
+      ux.warn(
+        `${envFilePath} is a directory, not a file. Proceeding without loading environment variables.`
+      );
+    }
+    return false;
+  }
   return true;
 }
 

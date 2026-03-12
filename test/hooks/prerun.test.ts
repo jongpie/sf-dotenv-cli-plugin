@@ -27,6 +27,9 @@ jest.mock('fs-extra', () => ({
   default: {
     pathExists: jest.fn(),
     readFile: jest.fn(),
+    stat: jest
+      .fn<() => Promise<{ isFile: () => boolean }>>()
+      .mockResolvedValue({ isFile: () => true }),
   },
 }));
 

@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { DEFAULT_ENV_PATH, getEnv } from '../../src/shared/index.js';
+import { ux } from '@oclif/core/ux';
 
 jest.mock('@oclif/core/ux', () => ({
   ux: {
@@ -14,6 +15,9 @@ jest.mock('fs-extra', () => ({
   default: {
     pathExists: jest.fn(),
     readFile: jest.fn(),
+    stat: jest.fn<() => Promise<{ isFile: () => boolean }>>().mockResolvedValue({
+      isFile: () => true,
+    }),
   },
 }));
 
@@ -54,6 +58,7 @@ jest.mock('dotenv', () => ({
 
 const mockedPathExists = fs.pathExists as unknown as jest.Mock<() => Promise<boolean>>;
 const mockedReadFile = fs.readFile as unknown as jest.Mock<() => Promise<string>>;
+const mockedStat = fs.stat as unknown as jest.Mock<() => Promise<{ isFile: () => boolean }>>;
 const mockedRelative = path.relative as jest.Mock<(from: string, to: string) => string>;
 
 describe('getEnv (shared/environment)', () => {
@@ -156,6 +161,32 @@ describe('getEnv (shared/environment)', () => {
 
       expect(result.env).toEqual({});
       expect(mockedReadFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('path is a directory', () => {
+    it('returns empty env when path is a directory (not a file)', async () => {
+      mockedPathExists.mockResolvedValue(true);
+      mockedStat.mockResolvedValueOnce({ isFile: () => false });
+      const shouldLog = false;
+
+      const result = await getEnv([], shouldLog, 'some-dir');
+
+      expect(result.env).toEqual({});
+      expect(result.envFilePath).toBe('some-dir');
+      expect(mockedReadFile).not.toHaveBeenCalled();
+    });
+
+    it('warns when path is a directory and shouldLog is true', async () => {
+      mockedPathExists.mockResolvedValue(true);
+      mockedStat.mockResolvedValueOnce({ isFile: () => false });
+      const shouldLog = true;
+
+      await getEnv([], shouldLog, '/path/to/dir');
+
+      expect(ux.warn).toHaveBeenCalledWith(
+        '/path/to/dir is a directory, not a file. Proceeding without loading environment variables.'
+      );
     });
   });
 

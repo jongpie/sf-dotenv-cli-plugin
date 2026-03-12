@@ -1,8 +1,15 @@
 import { jest } from '@jest/globals';
 import { Config } from '@oclif/core';
 
-type GetEnvResult = { envFilePath: string; env: Record<string, string> };
-type ParseResult = { flags: { env: string; 'show-values': boolean } };
+interface GetEnvResult {
+  envFilePath: string;
+  env: Record<string, string>;
+}
+
+interface ParseResult {
+  flags: { env: string; 'show-values': boolean };
+}
+
 const mockGetEnv = jest.fn() as jest.Mock<(...args: unknown[]) => Promise<GetEnvResult>>;
 const mockDisplayLoadedEnvVars = jest.fn();
 

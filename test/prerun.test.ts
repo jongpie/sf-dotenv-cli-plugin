@@ -102,6 +102,9 @@ describe('prerun hook', () => {
   const ORIGINAL_ENV = Object.freeze({ ...process.env });
   const mockConfig = {} as Config;
   const mockCommand = {} as Command.Class;
+  const mockLogger = () => {
+    // don't pipe to stdout and clog up the terminal
+  };
 
   beforeEach(() => {
     // Restore original environment variables
@@ -111,8 +114,8 @@ describe('prerun hook', () => {
     // Default path.resolve mock
     mockedResolve.mockImplementation((...args: string[]) => args.join('/'));
     // Mock ux console methods
-    jest.spyOn(ux, 'stdout').mockImplementation(() => {});
-    jest.spyOn(ux, 'warn').mockImplementation(() => {});
+    jest.spyOn(ux, 'stdout').mockImplementation(mockLogger);
+    jest.spyOn(ux, 'warn').mockImplementation(mockLogger);
   });
 
   describe('help command handling', () => {

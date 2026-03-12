@@ -5,6 +5,11 @@ import tseslint from 'typescript-eslint';
 export default defineConfig([
   {
     files: ['src/**/*.ts', 'test/**/*.ts'],
-    extends: [eslint.configs.recommended, tseslint.configs.recommended],
+    extends: [
+      eslint.configs.recommended,
+      tseslint.configs.recommended,
+      tseslint.configs.strict,
+      tseslint.configs.stylistic,
+    ],
   },
 ]);

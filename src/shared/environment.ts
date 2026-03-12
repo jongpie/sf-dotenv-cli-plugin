@@ -47,7 +47,10 @@ async function loadEnvFile(envFilePath: string): Promise<Record<string, string>>
 }
 
 /** Result of loading an env file: path (relative to cwd) and parsed key-value map. */
-export type EnvConfig = { envFilePath: string; env: Record<string, string> };
+export interface EnvConfig {
+  envFilePath: string;
+  env: Record<string, string>;
+}
 
 export const getEnv = async (
   argv: string[],

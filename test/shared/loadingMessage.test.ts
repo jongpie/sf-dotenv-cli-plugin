@@ -41,7 +41,7 @@ describe('displayLoadedEnvVars (shared/loadingMessage)', () => {
     it('sorts variable names', () => {
       displayLoadedEnvVars({ envFilePath: '.env', env: { ZEE: 'z', ALPHA: 'a' } });
 
-      const output = (ux.stdout as jest.Mock).mock.calls[0][0];
+      const output = (ux.stdout as jest.Mock).mock.calls[0][0] as string;
       const checkIndex = output.indexOf('✔');
       const afterCheck = output.slice(checkIndex);
       expect(afterCheck.indexOf('ALPHA')).toBeLessThan(afterCheck.indexOf('ZEE'));
@@ -80,7 +80,7 @@ describe('displayLoadedEnvVars (shared/loadingMessage)', () => {
         { showValues: true }
       );
 
-      const msg = (ux.stdout as jest.Mock).mock.calls[0][0];
+      const msg = (ux.stdout as jest.Mock).mock.calls[0][0] as string;
       expect(msg.indexOf('ALPHA=a')).toBeLessThan(msg.indexOf('ZEE=z'));
     });
   });

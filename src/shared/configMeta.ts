@@ -10,7 +10,7 @@ export default [
     input: {
       validator: (value: ConfigValue): boolean =>
         value != null && ['true', 'false'].includes(value.toString()),
-      failedMessage: 'Must provide a boolean value.',
+      failedMessage: 'must provide either "true" or "false"',
     },
   },
 ];

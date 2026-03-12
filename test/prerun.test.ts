@@ -100,7 +100,7 @@ const testHook = async (params: { Command: Command.Class; config: Config; argv: 
 
 describe('prerun hook', () => {
   const ORIGINAL_ENV = Object.freeze({ ...process.env });
-  const mockConfig = { 'should-log-env': 'true' } as unknown as Config;
+  const mockConfig = {} as Config;
   const mockCommand = {} as Command.Class;
   const mockLogger = () => {
     // don't pipe to stdout and clog up the terminal

@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { Config } from '@oclif/core';
 
-import { DEFAULT_ENV_PATH } from '../src/shared/index.js';
+import { DEFAULT_ENV_PATH } from '../../../src/shared/index.js';
 
 interface GetEnvResult {
   envFilePath: string;
@@ -31,15 +31,15 @@ jest.mock('@salesforce/sf-plugins-core', () => ({
   },
 }));
 
-jest.mock('../src/shared/index.js', () => ({
+jest.mock('../../../src/shared/index.js', () => ({
   getEnv: (...args: unknown[]) => mockGetEnv(...args),
   displayLoadedEnvVars: (...args: unknown[]) => mockDisplayLoadedEnvVars(...args),
   PLUGIN_NAME: 'sf-dotenv',
 }));
 
-import DotEnv from '../src/commands/dotenv.js';
+import DotEnvInspect from '../../../src/commands/dotenv/inspect.js';
 
-describe('dotenv command', () => {
+describe('dotenv inspect command', () => {
   const mockConfig = {} as Config;
 
   beforeEach(() => {
@@ -54,7 +54,7 @@ describe('dotenv command', () => {
     argv: string[],
     flags: { env?: string; 'show-values'?: boolean } = {}
   ): Promise<void> {
-    const cmd = new DotEnv(argv, mockConfig);
+    const cmd = new DotEnvInspect(argv, mockConfig);
     const resolvedFlags = {
       env: flags.env ?? DEFAULT_ENV_PATH,
       'show-values': flags['show-values'] ?? false,
@@ -118,7 +118,7 @@ describe('dotenv command', () => {
 
   describe('when json is enabled', () => {
     it('does not call displayLoadedEnvVars when jsonEnabled() returns true', async () => {
-      const cmd = new DotEnv(['dotenv'], mockConfig);
+      const cmd = new DotEnvInspect(['dotenv'], mockConfig);
       const mockParse = jest.fn() as jest.Mock<() => Promise<ParseResult>>;
       mockParse.mockResolvedValue({
         flags: { env: DEFAULT_ENV_PATH, 'show-values': false },

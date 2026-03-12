@@ -6,8 +6,8 @@ import { Config } from '@oclif/core';
 import { ux } from '@oclif/core/ux';
 
 import dotenv from 'dotenv';
-import { DEFAULT_ENV_PATH, CONFIG_SHOULD_LOG_KEY } from '../src/shared/constants.js';
-import hook from '../src/hooks/prerun.js';
+import { DEFAULT_ENV_PATH, CONFIG_SHOULD_LOG_KEY } from '../../src/shared/constants.js';
+import hook from '../../src/hooks/prerun.js';
 
 const shouldLogMock = jest.fn();
 

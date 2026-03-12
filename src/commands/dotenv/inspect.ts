@@ -1,7 +1,7 @@
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
-import { DEFAULT_ENV_PATH, displayLoadedEnvVars, getEnv, PLUGIN_NAME } from '../shared/index.js';
+import { DEFAULT_ENV_PATH, displayLoadedEnvVars, getEnv, PLUGIN_NAME } from '../../shared/index.js';
 
-export default class DotEnv extends SfCommand<void> {
+export default class DotEnvInspect extends SfCommand<void> {
   public static readonly summary =
     'This plugin runs whenever another `sf` cli command is invoked, and loads environment variables into context.';
   public static readonly description =
@@ -23,7 +23,7 @@ export default class DotEnv extends SfCommand<void> {
   };
 
   public async run(): Promise<void> {
-    const { flags } = await this.parse(DotEnv);
+    const { flags } = await this.parse(DotEnvInspect);
     const envConfig = await getEnv(this.argv, true, flags.env);
 
     if (!this.jsonEnabled()) {

@@ -7,4 +7,4 @@ updates:
     allow:
       - dependency-type: 'production'
     labels:
-      - 'image-update'
+      - 'dependency-update'

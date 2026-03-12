@@ -79,7 +79,7 @@
     "prettier:verify": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "lint:fix": "eslint . --fix",
-    "lint:verify": "eslint . --config eslint.config.js",
+    "lint:verify": "eslint .",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "npm run compile",
     "preversion": "npm run compile",

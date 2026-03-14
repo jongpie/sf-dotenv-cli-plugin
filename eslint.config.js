@@ -7,9 +7,16 @@ export default defineConfig([
     files: ['src/**/*.ts', 'test/**/*.ts'],
     extends: [
       eslint.configs.recommended,
-      tseslint.configs.recommended,
-      tseslint.configs.strict,
-      tseslint.configs.stylistic,
+      tseslint.configs.strictTypeChecked,
+      tseslint.configs.stylisticTypeChecked,
+      tseslint.configs.recommendedTypeChecked,
     ],
+  },
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+      },
+    },
   },
 ]);

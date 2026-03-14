@@ -1,0 +1,11 @@
+{
+  "extends": "@salesforce/dev-config/tsconfig-strict-esm",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "sourceMap": true
+  },
+  "include": ["./**/*.ts"]
+}

@@ -41,9 +41,9 @@ jest.mock('path', () => ({
 const dotenvPopulateImpl = (
   env: Record<string, string>,
   values: Record<string, string>,
-  options: { override?: boolean } = {}
+  options: { override?: boolean } = { override: false }
 ) => {
-  const override = Boolean(options?.override);
+  const override = Boolean(options.override);
   for (const key of Object.keys(values)) {
     if (Object.prototype.hasOwnProperty.call(env, key)) {
       if (override) env[key] = values[key];
@@ -51,11 +51,12 @@ const dotenvPopulateImpl = (
       env[key] = values[key];
     }
   }
+  return null;
 };
 
 jest.mock('dotenv', () => ({
   default: {
-    parse: (val: string) => {
+    parse: (val?: string) => {
       return (val?.split('\n') ?? [])
         .filter((val) => val)
         .map((splitValue: string) => {
@@ -152,8 +153,8 @@ describe('prerun hook', () => {
     it('should default to false when SF_DOTENV_DISABLED is not set', async () => {
       expect(process.env.SF_DOTENV_DISABLED).toBeUndefined();
       const argv = ['some-command'];
-      mockedPathExists.mockImplementation(async () => true);
-      mockedReadFile.mockImplementation(async () => 'TEST_VAR=test_value');
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -164,8 +165,8 @@ describe('prerun hook', () => {
     it('should proceed when SF_DOTENV_DISABLED is not true', async () => {
       process.env.SF_DOTENV_DISABLED = 'false';
       const argv = ['some-command'];
-      mockedPathExists.mockImplementation(async () => true);
-      mockedReadFile.mockImplementation(async () => 'TEST_VAR=test_value');
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -187,8 +188,8 @@ describe('prerun hook', () => {
   describe('environment file path resolution', () => {
     it('should use --env parameter when provided', async () => {
       const argv = ['some-command', '--env', 'custom.env'];
-      mockedPathExists.mockImplementation(async () => true);
-      mockedReadFile.mockImplementation(async () => 'TEST_VAR=test_value');
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -198,8 +199,8 @@ describe('prerun hook', () => {
 
     it('should use -e parameter when provided', async () => {
       const argv = ['some-command', '-e', 'custom.env'];
-      mockedPathExists.mockImplementation(async () => true);
-      mockedReadFile.mockImplementation(async () => 'TEST_VAR=test_value');
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
       mockedResolve.mockReturnValue('custom.env');
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
@@ -211,8 +212,8 @@ describe('prerun hook', () => {
     it('should use SF_DOTENV_FILE environment variable when set', async () => {
       process.env.SF_DOTENV_FILE = 'env-file.env';
       const argv = ['some-command'];
-      mockedPathExists.mockImplementation(async () => true);
-      mockedReadFile.mockImplementation(async () => 'TEST_VAR=test_value');
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -222,8 +223,8 @@ describe('prerun hook', () => {
 
     it('should use default .env file when no custom path is provided', async () => {
       const argv = ['some-command'];
-      mockedPathExists.mockImplementation(async () => true);
-      mockedReadFile.mockImplementation(async () => 'TEST_VAR=test_value');
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -233,8 +234,8 @@ describe('prerun hook', () => {
 
     it('should remove --env parameter and its value from argv', async () => {
       const argv = ['some-command', '--env', 'custom.env', 'other-arg'];
-      mockedPathExists.mockImplementation(async () => true);
-      mockedReadFile.mockImplementation(async () => 'TEST_VAR=test_value');
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -245,7 +246,7 @@ describe('prerun hook', () => {
   describe('file existence handling', () => {
     it('should return early when .env file does not exist', async () => {
       const argv = ['some-command'];
-      mockedPathExists.mockImplementation(async () => false);
+      mockedPathExists.mockImplementation(() => Promise.resolve(false));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -254,7 +255,7 @@ describe('prerun hook', () => {
 
     it('should warn when custom env file does not exist', async () => {
       const argv = ['some-command', '--env', 'missing.env'];
-      mockedPathExists.mockImplementation(async () => false);
+      mockedPathExists.mockImplementation(() => Promise.resolve(false));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -265,7 +266,7 @@ describe('prerun hook', () => {
     it('should not warn when custom env file does not exist and logging disabled', async () => {
       shouldLogMock.mockReturnValue(undefined);
       const argv = ['some-command', '--env', 'missing.env'];
-      mockedPathExists.mockImplementation(async () => false);
+      mockedPathExists.mockImplementation(() => Promise.resolve(false));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -274,7 +275,7 @@ describe('prerun hook', () => {
 
     it('should not warn when default .env file does not exist', async () => {
       const argv = ['some-command'];
-      mockedPathExists.mockImplementation(async () => false);
+      mockedPathExists.mockImplementation(() => Promise.resolve(false));
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
@@ -286,7 +287,7 @@ describe('prerun hook', () => {
     it('should load environment variables from .env file', async () => {
       const argv = ['some-command'];
       const envContent = 'TEST_VAR=test_value\nANOTHER_VAR=another_value';
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockResolvedValue(envContent);
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
@@ -298,7 +299,7 @@ describe('prerun hook', () => {
     it('should display loading message with correct count and file path', async () => {
       const argv = ['some-command'];
       const envContent = 'TEST_VAR=test_value\nANOTHER_VAR=another_value';
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockResolvedValue(envContent);
       mockedRelative.mockReturnValue(DEFAULT_ENV_PATH);
 
@@ -312,7 +313,7 @@ describe('prerun hook', () => {
     it('should not display loading message when --json flag is present', async () => {
       const argv = ['some-command', '--json'];
       const envContent = 'TEST_VAR=test_value';
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockResolvedValue(envContent);
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
@@ -322,7 +323,7 @@ describe('prerun hook', () => {
 
     it('should handle empty .env file', async () => {
       const argv = ['some-command'];
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockResolvedValue('');
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
@@ -335,7 +336,7 @@ describe('prerun hook', () => {
     it('should handle file read errors gracefully', async () => {
       const argv = ['some-command'];
       const error = new Error('Permission denied');
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockRejectedValue(error);
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
@@ -345,7 +346,7 @@ describe('prerun hook', () => {
 
     it('should handle non-Error exceptions', async () => {
       const argv = ['some-command'];
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockRejectedValue('String error');
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
@@ -357,7 +358,7 @@ describe('prerun hook', () => {
   describe('environment variable precedence', () => {
     it('should call dotenv.populate with override==true so .env file values take precedence', async () => {
       const argv = ['some-command'];
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockResolvedValue('FOO=bar');
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
@@ -373,7 +374,7 @@ describe('prerun hook', () => {
       process.env.EXISTING_VAR = 'existing_value';
       const argv = ['some-command'];
       const envContent = 'EXISTING_VAR=new_value\nNEW_VAR=new_value';
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockResolvedValue(envContent);
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
@@ -386,7 +387,7 @@ describe('prerun hook', () => {
       process.env.NOT_IN_ENV_FILE = 'unchanged_value';
       const argv = ['some-command'];
       const envContent = 'ONLY_IN_FILE=from_file';
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockResolvedValue(envContent);
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
@@ -400,7 +401,7 @@ describe('prerun hook', () => {
       process.env.LEAVE_ME_ALONE = 'original';
       const argv = ['some-command'];
       const envContent = 'OVERWRITE_ME=new\nANOTHER_NEW=value';
-      mockedPathExists.mockImplementation(async () => true);
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
       mockedReadFile.mockResolvedValue(envContent);
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });

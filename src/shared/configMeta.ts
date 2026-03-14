@@ -9,6 +9,7 @@ export default [
       'Whether or not to print out the loaded env variables prior to running any other SF CLI command',
     input: {
       validator: (value: ConfigValue): boolean =>
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
         value != null && ['true', 'false'].includes(value.toString()),
       failedMessage: 'must provide either "true" or "false"',
     },

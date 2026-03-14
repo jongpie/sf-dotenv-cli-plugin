@@ -28,16 +28,18 @@ export function displayLoadedEnvVars(
     return;
   }
 
-  const sorted = [...loadedVars].sort();
+  const sortedEnvironmentKeys = [...loadedVars].sort();
   const environmentVariableLabel = `environment variable${loadedCount === 1 ? '' : 's'}`;
   const header = `\n ────────── Loading Environment Variables ─────────\n`;
   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   const loadingLine = `Loading ${loadedCount} ${environmentVariableLabel} from file ${envConfig.envFilePath}:`;
-  let printedMessage = sorted.join(DELIMITER);
+  let printedMessage = sortedEnvironmentKeys.join(DELIMITER);
 
   if (options.showValues) {
     ux.warn(SENSITIVE_OUTPUT_WARNING);
-    printedMessage = sorted.map((key) => `${key}=${envConfig.env[key]}`).join(DELIMITER);
+    printedMessage = sortedEnvironmentKeys
+      .map((key) => `${key}=${envConfig.env[key]}`)
+      .join(DELIMITER);
   }
   ux.stdout(`${header}${loadingLine}${DELIMITER}${printedMessage}`);
 }

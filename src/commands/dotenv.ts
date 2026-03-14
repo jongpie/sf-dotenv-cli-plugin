@@ -24,8 +24,7 @@ export default class DotEnv extends SfCommand<void> {
 
   public async run(): Promise<void> {
     const { flags } = await this.parse(DotEnv);
-    const envFilePath = flags.env;
-    const envConfig = await getEnv(this.argv, true, envFilePath);
+    const envConfig = await getEnv(this.argv, true, flags.env);
 
     if (!this.jsonEnabled()) {
       displayLoadedEnvVars(envConfig, { showValues: flags['show-values'] });

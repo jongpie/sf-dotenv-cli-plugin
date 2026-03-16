@@ -30,9 +30,9 @@ export function displayLoadedEnvVars(
 
   const sortedEnvironmentKeys = [...loadedVars].sort();
   const environmentVariableLabel = `environment variable${loadedCount === 1 ? '' : 's'}`;
+
   const header = `\n ────────── Loading Environment Variables ─────────\n`;
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-  const loadingLine = `Loading ${loadedCount} ${environmentVariableLabel} from file ${envConfig.envFilePath}:`;
+  const loadingLine = `Loading ${String(loadedCount)} ${environmentVariableLabel} from file ${envConfig.envFilePath}:`;
   let printedMessage = sortedEnvironmentKeys.join(DELIMITER);
 
   if (options.showValues) {

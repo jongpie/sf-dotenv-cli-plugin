@@ -69,7 +69,12 @@
     "hooks": {
       "prerun": "./lib/hooks/prerun"
     },
-    "commands": "./lib/commands"
+    "commands": "./lib/commands",
+    "topics": {
+      "dotenv": {
+        "description": "Leverage .env files within sf CLI"
+      }
+    }
   },
   "scripts": {
     "prepare": "husky",

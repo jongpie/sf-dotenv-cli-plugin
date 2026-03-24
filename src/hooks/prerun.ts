@@ -16,12 +16,7 @@ let shouldLog = true;
  * Check if the hook should be skipped based on command arguments
  */
 function shouldSkipHook(argv: string[], pluginName?: string) {
-  return (
-    pluginName === PLUGIN_NAME ||
-    argv.includes('--help') ||
-    argv.includes('-h') ||
-    argv[0] === 'dotenv'
-  );
+  return pluginName === PLUGIN_NAME || argv.includes('--help') || argv.includes('-h') || argv[0] === 'dotenv';
 }
 
 /**
@@ -34,10 +29,7 @@ function isDotEnvDisabled() {
 /**
  * Display the loading message with environment variables (when not suppressed)
  */
-function displayLoadingMessage(
-  envConfig: { envFilePath: string; env: Record<string, string> },
-  argv: string[]
-): void {
+function displayLoadingMessage(envConfig: { envFilePath: string; env: Record<string, string> }, argv: string[]): void {
   if (!shouldLog || argv.includes('--json')) {
     return;
   }
@@ -49,9 +41,7 @@ function displayLoadingMessage(
  */
 function handleLoadError(error: unknown): void {
   if (shouldLog) {
-    ux.warn(
-      `Failed to load .env file: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    ux.warn(`Failed to load .env file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

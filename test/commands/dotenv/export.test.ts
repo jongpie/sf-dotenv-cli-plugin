@@ -66,9 +66,7 @@ describe('dotenv export command', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockResolve.mockImplementation((...args: unknown[]) =>
-      actualPath.resolve(...(args as [string, ...string[]]))
-    );
+    mockResolve.mockImplementation((...args: unknown[]) => actualPath.resolve(...(args as [string, ...string[]])));
     mockStatSync.mockReturnValue({ isDirectory: () => false });
     // Default: no project file (tests that need it override)
     mockExistsSync.mockReturnValue(false);
@@ -89,9 +87,7 @@ describe('dotenv export command', () => {
     it('errors with a clear message', async () => {
       mockExistsSync.mockReturnValue(false);
 
-      await expect(runCommand(['dotenv', 'export'])).rejects.toThrow(
-        /Could not find sfdx-project\.json/
-      );
+      await expect(runCommand(['dotenv', 'export'])).rejects.toThrow(/Could not find sfdx-project\.json/);
 
       expect(mockExistsSync).toHaveBeenCalled();
       expect(mockReadFileSync).not.toHaveBeenCalled();
@@ -103,9 +99,7 @@ describe('dotenv export command', () => {
       mockExistsSync.mockReturnValue(true);
       mockReadFileSync.mockReturnValue('not valid json {');
 
-      await expect(runCommand(['dotenv', 'export'])).rejects.toThrow(
-        /Failed to parse sfdx-project\.json/
-      );
+      await expect(runCommand(['dotenv', 'export'])).rejects.toThrow(/Failed to parse sfdx-project\.json/);
     });
   });
 
@@ -133,9 +127,7 @@ describe('dotenv export command', () => {
 
       await cmd.run();
 
-      expect(logSpy).not.toHaveBeenCalledWith(
-        'No "replaceWithEnv" entries found in sfdx-project.json. Nothing to do.'
-      );
+      expect(logSpy).not.toHaveBeenCalledWith('No "replaceWithEnv" entries found in sfdx-project.json. Nothing to do.');
       expect(mockWriteFileSync).not.toHaveBeenCalled();
       expect(mockAppendFileSync).not.toHaveBeenCalled();
     });

@@ -4,8 +4,7 @@ import { DEFAULT_ENV_PATH, displayLoadedEnvVars, getEnv, PLUGIN_NAME } from '../
 export default class DotEnvInspect extends SfCommand<void> {
   public static readonly summary =
     'This plugin runs whenever another `sf` cli command is invoked, and loads environment variables into context.';
-  public static readonly description =
-    'Runs in the background - prints environment variables if invoked directly';
+  public static readonly description = 'Runs in the background - prints environment variables if invoked directly';
 
   public static pluginName = PLUGIN_NAME;
 

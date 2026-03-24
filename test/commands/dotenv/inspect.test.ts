@@ -50,10 +50,7 @@ describe('dotenv inspect command', () => {
     });
   });
 
-  async function runCommand(
-    argv: string[],
-    flags: { env?: string; 'show-values'?: boolean } = {}
-  ): Promise<void> {
+  async function runCommand(argv: string[], flags: { env?: string; 'show-values'?: boolean } = {}): Promise<void> {
     const cmd = new DotEnvInspect(argv, mockConfig);
     const resolvedFlags = {
       env: flags.env ?? DEFAULT_ENV_PATH,

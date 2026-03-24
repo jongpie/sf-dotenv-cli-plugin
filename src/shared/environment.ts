@@ -26,11 +26,7 @@ function determineEnvFilePath(argv: string[], explicitPath?: string) {
   return { envFilePath: path.resolve(envFilePath), envFileIndex };
 }
 
-async function validateEnvFile(
-  envFilePath: string,
-  envFileIndex: number,
-  shouldLog: boolean
-): Promise<boolean> {
+async function validateEnvFile(envFilePath: string, envFileIndex: number, shouldLog: boolean): Promise<boolean> {
   if (!(await fs.pathExists(envFilePath))) {
     if (envFileIndex !== -1 && shouldLog) {
       ux.warn(`Environment file not found: ${envFilePath}`);
@@ -41,9 +37,7 @@ async function validateEnvFile(
   const stat = await fs.stat(envFilePath);
   if (!stat.isFile()) {
     if (shouldLog) {
-      ux.warn(
-        `${envFilePath} is a directory, not a file. Proceeding without loading environment variables.`
-      );
+      ux.warn(`${envFilePath} is a directory, not a file. Proceeding without loading environment variables.`);
     }
     return false;
   }
@@ -63,11 +57,7 @@ export interface EnvConfig {
   env: Record<string, string>;
 }
 
-export const getEnv = async (
-  argv: string[],
-  shouldLog = false,
-  explicitEnvFilePath?: string
-): Promise<EnvConfig> => {
+export const getEnv = async (argv: string[], shouldLog = false, explicitEnvFilePath?: string): Promise<EnvConfig> => {
   const { envFilePath, envFileIndex } = determineEnvFilePath(argv, explicitEnvFilePath);
   if (!(await validateEnvFile(envFilePath, envFileIndex, shouldLog))) {
     return { envFilePath: path.relative(process.cwd(), envFilePath), env: {} };

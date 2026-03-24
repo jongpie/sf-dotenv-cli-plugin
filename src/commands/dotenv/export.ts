@@ -26,8 +26,7 @@ const SFDX_PROJECT_FILE = 'sfdx-project.json';
 export default class DotEnvExport extends SfCommand<void> {
   public static pluginName = PLUGIN_NAME;
 
-  public static readonly summary =
-    'Generate or update an .env file with "replaceWithEnv" entries in sfdx-project.json';
+  public static readonly summary = 'Generate or update an .env file with "replaceWithEnv" entries in sfdx-project.json';
   public static readonly description =
     'Reads sfdx-project.json and writes any "replaceWithEnv" values from the "replacements" node to a .env file. ' +
     'If the output file already exists, only missing keys are appended.';
@@ -82,9 +81,7 @@ export default class DotEnvExport extends SfCommand<void> {
     const projectFilePath = path.resolve(process.cwd(), SFDX_PROJECT_FILE);
 
     if (!fs.existsSync(projectFilePath)) {
-      this.error(
-        `Could not find ${SFDX_PROJECT_FILE} in the current directory (${process.cwd()}).`
-      );
+      this.error(`Could not find ${SFDX_PROJECT_FILE} in the current directory (${process.cwd()}).`);
     }
 
     try {
@@ -154,11 +151,7 @@ export default class DotEnvExport extends SfCommand<void> {
     return { outputFilePath, existingContent, existingKeys };
   }
 
-  private getMissingKeys(
-    environmentKeys: string[],
-    existingKeys: Set<string>,
-    outputFile: string
-  ): string[] | null {
+  private getMissingKeys(environmentKeys: string[], existingKeys: Set<string>, outputFile: string): string[] | null {
     const missingKeys = environmentKeys.filter((k) => !existingKeys.has(k)).sort();
 
     if (missingKeys.length === 0) {
@@ -193,11 +186,7 @@ export default class DotEnvExport extends SfCommand<void> {
     return envFileNewLines.join('\n');
   }
 
-  private writeEnvFile(
-    outputFilePath: string,
-    appendContent: string,
-    existingContent: string
-  ): void {
+  private writeEnvFile(outputFilePath: string, appendContent: string, existingContent: string): void {
     if (existingContent) {
       fs.appendFileSync(outputFilePath, appendContent, 'utf-8');
     } else {

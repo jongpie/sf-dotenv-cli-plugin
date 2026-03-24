@@ -34,7 +34,9 @@ jest.mock('dotenv', () => ({
       const result: Record<string, string> = {};
       for (const line of (content ?? '').split('\n').filter(Boolean)) {
         const eq = line.indexOf('=');
-        if (eq > 0) result[line.slice(0, eq)] = line.slice(eq + 1);
+        if (eq > 0) {
+          result[line.slice(0, eq)] = line.slice(eq + 1);
+        }
       }
       return result;
     },

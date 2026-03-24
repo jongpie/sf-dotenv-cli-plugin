@@ -18,10 +18,7 @@ interface DisplayLoadedEnvVarsOptions {
  * When showValues is false: variable names only with checkmarks (prerun and `sf dotenv` without --show-values).
  * When showValues is true: key=value pairs with checkmarks, preceded by a security warning (all via ux).
  */
-export function displayLoadedEnvVars(
-  envConfig: EnvConfig,
-  options: DisplayLoadedEnvVarsOptions
-): void {
+export function displayLoadedEnvVars(envConfig: EnvConfig, options: DisplayLoadedEnvVarsOptions): void {
   const loadedVars = Object.keys(envConfig.env);
   const loadedCount = loadedVars.length;
   if (loadedCount === 0) {
@@ -37,9 +34,7 @@ export function displayLoadedEnvVars(
 
   if (options.showValues) {
     ux.warn(SENSITIVE_OUTPUT_WARNING);
-    printedMessage = sortedEnvironmentKeys
-      .map((key) => `${key}=${envConfig.env[key]}`)
-      .join(DELIMITER);
+    printedMessage = sortedEnvironmentKeys.map((key) => `${key}=${envConfig.env[key]}`).join(DELIMITER);
   }
   ux.stdout(`${header}${loadingLine}${DELIMITER}${printedMessage}`);
 }

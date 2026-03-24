@@ -1,6 +1,5 @@
 module.exports = {
-  '*.{ts,js,json,yml,yaml,md}': (filenames) =>
-    filenames.map((filename) => `prettier --write '${filename}'`),
+  '*.{ts,js,json,yml,yaml,md}': (filenames) => filenames.map((filename) => `prettier --write '${filename}'`),
   '{src,test}/**/*.ts': (filenames) => {
     if (filenames.length === 0) {
       return [];

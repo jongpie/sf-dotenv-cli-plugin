@@ -1,11 +1,7 @@
 import { jest } from '@jest/globals';
 import { ux } from '@oclif/core';
 
-import {
-  DEFAULT_ENV_PATH,
-  displayLoadedEnvVars,
-  SENSITIVE_OUTPUT_WARNING,
-} from '../../src/shared/index.js';
+import { DEFAULT_ENV_PATH, displayLoadedEnvVars, SENSITIVE_OUTPUT_WARNING } from '../../src/shared/index.js';
 
 jest.mock('@oclif/core', () => ({
   ux: {
@@ -31,10 +27,7 @@ describe('displayLoadedEnvVars (shared/loadingMessage)', () => {
 
   describe('names only (showValues false or omitted)', () => {
     it('calls ux.stdout with header and loading line and variable names with checkmarks', () => {
-      displayLoadedEnvVars(
-        { envFilePath: DEFAULT_ENV_PATH, env: { FOO: 'x', BAR: 'y' } },
-        { showValues: false }
-      );
+      displayLoadedEnvVars({ envFilePath: DEFAULT_ENV_PATH, env: { FOO: 'x', BAR: 'y' } }, { showValues: false });
 
       expect(ux.stdout).toHaveBeenCalledTimes(1);
       const output = (ux.stdout as jest.Mock).mock.calls[0][0];
@@ -46,10 +39,7 @@ describe('displayLoadedEnvVars (shared/loadingMessage)', () => {
     });
 
     it('sorts variable names', () => {
-      displayLoadedEnvVars(
-        { envFilePath: DEFAULT_ENV_PATH, env: { ZEE: 'z', ALPHA: 'a' } },
-        { showValues: false }
-      );
+      displayLoadedEnvVars({ envFilePath: DEFAULT_ENV_PATH, env: { ZEE: 'z', ALPHA: 'a' } }, { showValues: false });
 
       const output = (ux.stdout as jest.Mock).mock.calls[0][0] as string;
       const checkIndex = output.indexOf('✔');
@@ -58,23 +48,15 @@ describe('displayLoadedEnvVars (shared/loadingMessage)', () => {
     });
 
     it('uses singular "environment variable" when count is 1', () => {
-      displayLoadedEnvVars(
-        { envFilePath: DEFAULT_ENV_PATH, env: { ONLY: 'v' } },
-        { showValues: false }
-      );
+      displayLoadedEnvVars({ envFilePath: DEFAULT_ENV_PATH, env: { ONLY: 'v' } }, { showValues: false });
 
-      expect(ux.stdout).toHaveBeenCalledWith(
-        expect.stringMatching(/Loading 1 environment variable from file \.env:/)
-      );
+      expect(ux.stdout).toHaveBeenCalledWith(expect.stringMatching(/Loading 1 environment variable from file \.env:/));
     });
   });
 
   describe('showValues true', () => {
     it('calls ux.warn then ux.stdout with header, loading line, and key=value lines with checkmarks', () => {
-      displayLoadedEnvVars(
-        { envFilePath: DEFAULT_ENV_PATH, env: { FOO: 'bar', BAR: 'baz' } },
-        { showValues: true }
-      );
+      displayLoadedEnvVars({ envFilePath: DEFAULT_ENV_PATH, env: { FOO: 'bar', BAR: 'baz' } }, { showValues: true });
 
       expect(ux.warn).toHaveBeenCalledTimes(1);
       expect(ux.warn).toHaveBeenCalledWith(SENSITIVE_OUTPUT_WARNING);
@@ -88,10 +70,7 @@ describe('displayLoadedEnvVars (shared/loadingMessage)', () => {
     });
 
     it('sorts keys when showValues is true', () => {
-      displayLoadedEnvVars(
-        { envFilePath: DEFAULT_ENV_PATH, env: { ZEE: 'z', ALPHA: 'a' } },
-        { showValues: true }
-      );
+      displayLoadedEnvVars({ envFilePath: DEFAULT_ENV_PATH, env: { ZEE: 'z', ALPHA: 'a' } }, { showValues: true });
 
       const msg = (ux.stdout as jest.Mock).mock.calls[0][0] as string;
       expect(msg.indexOf('ALPHA=a')).toBeLessThan(msg.indexOf('ZEE=z'));

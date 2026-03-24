@@ -27,9 +27,7 @@ jest.mock('fs-extra', () => ({
   default: {
     pathExists: jest.fn(),
     readFile: jest.fn(),
-    stat: jest
-      .fn<() => Promise<{ isFile: () => boolean }>>()
-      .mockResolvedValue({ isFile: () => true }),
+    stat: jest.fn<() => Promise<{ isFile: () => boolean }>>().mockResolvedValue({ isFile: () => true }),
   },
 }));
 
@@ -49,7 +47,9 @@ const dotenvPopulateImpl = (
   const override = Boolean(options.override);
   for (const key of Object.keys(values)) {
     if (Object.prototype.hasOwnProperty.call(env, key)) {
-      if (override) env[key] = values[key];
+      if (override) {
+        env[key] = values[key];
+      }
     } else {
       env[key] = values[key];
     }
@@ -68,12 +68,8 @@ jest.mock('dotenv', () => ({
         })
         .reduce((prev, curr) => ({ ...prev, ...curr }), {});
     },
-    populate: jest.fn(
-      (
-        env: Record<string, string>,
-        values: Record<string, string>,
-        options?: { override?: boolean }
-      ) => dotenvPopulateImpl(env, values, options ?? {})
+    populate: jest.fn((env: Record<string, string>, values: Record<string, string>, options?: { override?: boolean }) =>
+      dotenvPopulateImpl(env, values, options ?? {})
     ),
   },
 }));
@@ -308,9 +304,7 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(ux.stdout).toHaveBeenCalledWith(
-        expect.stringMatching(/Loading 2 environment variables from file \.env:/)
-      );
+      expect(ux.stdout).toHaveBeenCalledWith(expect.stringMatching(/Loading 2 environment variables from file \.env:/));
     });
 
     it('should not display loading message when --json flag is present', async () => {
@@ -366,11 +360,9 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(dotenv.populate).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({ FOO: 'bar' }),
-        { override: true }
-      );
+      expect(dotenv.populate).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ FOO: 'bar' }), {
+        override: true,
+      });
     });
 
     it('should override existing environment variables with values from .env file', async () => {

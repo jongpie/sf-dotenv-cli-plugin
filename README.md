@@ -6,7 +6,8 @@ A Salesforce CLI plugin that loads environment variables from `.env` files when 
 
 - **Automatic loading**: A prerun hook loads a `.env` file (by default `.env` in the current directory) before every `sf` command. Values from the `.env` file override existing environment variables of the same name; variables not defined in the file are left unchanged.
 - **Per-command file**: Use `--env` or `-e` with any command to load a specific file, e.g. `sf --env .env.prod project deploy start`.
-- **Inspect loaded vars**: Run `sf dotenv` to see which variables are loaded from `.env`; use `sf dotenv --show-values` to print names and values (with a security warning).
+- **Inspect loaded vars**: Run `sf dotenv inspect` to see which variables are loaded from `.env`; use `sf dotenv inspect --show-values` to print names and values (with a security warning).
+- **Export from `sfdx-project.json`**: Run `sf dotenv export` to scaffold (or update) a `.env` file with every variable referenced by `replaceWithEnv` entries in your `sfdx-project.json`.
 
 ## Quick Start
 
@@ -19,7 +20,7 @@ BAR=some other value
 
 Run any `sf` command, and the plugin automatically loads the file `.env` (if it exists). In this example of deploying Apex classes, the names of the loaded environment variables are displayed before the command executes.
 
-<img src="./images/prerun-hook-example-deploy-command-output.png" width="500"  alt="Environment Variables Automatically Loaded During Apex Class Deployment">
+<img src="./images/prerun-hook-example-deploy-command-output.png" width="500" alt="Environment Variables Automatically Loaded During Apex Class Deployment">
 
 ## Installation
 
@@ -94,34 +95,51 @@ For different environments, use a separate env file and pass it to the command:
 sf project deploy start --source-dir force-app -e .env.production
 ```
 
-## Usage: Debug & Test with `sf dotenv` Command
+#### Scaffolding a `.env` File from `sfdx-project.json`
 
-**Inspect**: The plugin is primarily focused on automatically running during any `sf` CLI command. But to aid with debugging & testing, you can run the command `sf dotenv` to see how your `.env` files are being loaded
+Rather than authoring a `.env` file by hand, you can let the plugin generate one from the `replaceWithEnv` entries in `sfdx-project.json`:
+
+```bash
+sf dotenv export
+```
+
+This reads `sfdx-project.json`, finds every `replaceWithEnv` reference under `replacements`, and writes the keys to a `.env` file in the current directory (default: `.env`). If the output file already exists, only missing keys are appended underneath an `# Auto-added by sf dotenv export` marker — existing entries are left untouched. Any matching variable already set in your shell's environment will be used as the default value; otherwise the key is written with an empty value for you to fill in.
+
+Use `--output-file` (alias `-o`) to write to a different file:
+
+```bash
+sf dotenv export --output-file .env.local
+sf dotenv export -o .env.production
+```
+
+## Usage: Debug & Test with `sf dotenv inspect` Command
+
+**Inspect**: The plugin is primarily focused on automatically running during any `sf` CLI command. But to aid with debugging & testing, you can run the command `sf dotenv inspect` to see how your `.env` files are being loaded.
 
 To see the names of environment variables being loaded, simply run the command:
 
 ```bash
-sf dotenv
+sf dotenv inspect
 ```
 
 This will attempt to load a `.env` file, and displays the names of any variables loaded:
 
-<img src="./images/dotenv-command-default-output.png" width="500"  alt="Environment Variables Names Displayed">
+<img src="./images/dotenv-command-default-output.png" width="500" alt="Environment Variables Names Displayed">
 
 > [!WARNING]
 > If you want to see the names _and_ values, pass the flag `--show-values`. But doing so will display potentially sensitive values, so use this with caution.
 
 ```bash
-sf dotenv --env .env.staging --show-values
+sf dotenv inspect --env .env.staging --show-values
 ```
 
-<img src="./images/dotenv-command-show-values-output.png" width="1000"  alt="Environment Variables Names & Values Displayed">
+<img src="./images/dotenv-command-show-values-output.png" width="1000" alt="Environment Variables Names & Values Displayed">
 
-More details about this command (shown below) can be seen by running `sf dotenv --help` or `sf dotenv -h`.
+More details about this command (shown below) can be seen by running `sf dotenv inspect --help` or `sf dotenv inspect -h`.
 
 ```bash
 USAGE
-  $ sf dotenv [--json] [--flags-dir <value>] [-e <value>] [--show-values]
+  $ sf dotenv inspect [--json] [--flags-dir <value>] [-e <value>] [--show-values]
 
 FLAGS
   -e, --env=<value>  [default: .env] Path to the .env file to load.
@@ -142,7 +160,6 @@ GLOBAL FLAGS
 
   You can also change this setting globally by adding the flag `--global`. To re-enable logging, run: `sf config set should-log-env true`.
 
-- **Plugin-Specific Environment Variables**: Some features can be controlled are a few environment variables you can set in your system to change
-
-- `SF_DOTENV_DISABLED` – set to `true` to disable automatic loading.
-- `SF_DOTENV_FILE` – path to the `.env` file used by automatic loading (default: `.env` in current directory).
+- **Plugin-Specific Environment Variables**: A few environment variables can be set in your shell to control plugin behavior:
+  - `SF_DOTENV_DISABLED` – set to `true` to disable automatic loading.
+  - `SF_DOTENV_FILE` – path to the `.env` file used by automatic loading (default: `.env` in the current directory).

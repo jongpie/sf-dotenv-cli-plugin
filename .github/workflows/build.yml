@@ -5,12 +5,11 @@ on:
     types: [opened, synchronize, reopened]
     paths-ignore:
       - 'README.md'
-      - 'Contributing.md'
-      - 'CODE_OF_CONDUCT.md'
       - 'LICENSE'
       - '.gitignore'
       - '.npmrc'
       - '.prettierrc'
+      - '.prettierignore'
 
 jobs:
   build:

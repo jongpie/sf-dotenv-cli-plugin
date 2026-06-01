@@ -1,0 +1,96 @@
+{
+  "name": "@jongpie/sf-dotenv-cli-plugin",
+  "version": "1.0.0",
+  "description": "Salesforce CLI plugin for loading environment variables from .env files",
+  "author": "Jonathan Gillespie",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jongpie/sf-dotenv-cli-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jongpie/sf-dotenv-cli-plugin/issues"
+  },
+  "homepage": "https://github.com/jongpie/sf-dotenv-cli-plugin#readme",
+  "keywords": [
+    "salesforce",
+    "cli",
+    "plugin",
+    "dotenv",
+    "environment",
+    "variables"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*",
+    "oclif.manifest.json"
+  ],
+  "dependencies": {
+    "@oclif/core": "4.10.2",
+    "dotenv": "17.3.1",
+    "fs-extra": "11.3.4"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.3.5",
+    "@eslint/js": "10.0.1",
+    "@salesforce/core": "8.27.1",
+    "@salesforce/dev-scripts": "11.0.4",
+    "@salesforce/sf-plugins-core": "12.2.6",
+    "@types/fs-extra": "11.0.4",
+    "@types/jest": "30.0.0",
+    "@types/node": "25.5.0",
+    "eslint": "10.1.0",
+    "globals": "17.4.0",
+    "husky": "9.1.7",
+    "jest": "30.3.0",
+    "lint-staged": "16.4.0",
+    "oclif": "4.23.10",
+    "prettier": "3.8.1",
+    "ts-jest": "29.4.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.57.2"
+  },
+  "oclif": {
+    "bin": "sf",
+    "configMeta": "lib/shared/configMeta",
+    "dirname": "sf",
+    "topicSeparator": " ",
+    "plugins": [
+      "@oclif/plugin-help"
+    ],
+    "hooks": {
+      "prerun": "./lib/hooks/prerun"
+    },
+    "commands": "./lib/commands",
+    "topics": {
+      "dotenv": {
+        "description": "Leverage .env files within sf CLI"
+      }
+    }
+  },
+  "scripts": {
+    "prepare": "husky",
+    "build": "tsc -p .",
+    "clean": "rm -rf lib",
+    "compile": "npm run clean && npm run build",
+    "prettier:verify": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "lint:fix": "eslint . --fix",
+    "lint:verify": "eslint .",
+    "postpack": "rm -f oclif.manifest.json",
+    "prepack": "npm run compile && oclif manifest",
+    "preversion": "npm run compile",
+    "test:coverage": "jest --coverage",
+    "test:debug": "jest --inspect-brk",
+    "test:watch": "jest --watch",
+    "test": "npm run compile && jest"
+  },
+  "type": "module"
+}

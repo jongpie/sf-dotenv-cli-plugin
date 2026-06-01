@@ -5,7 +5,7 @@ import path from 'path';
 import { Config } from '@oclif/core';
 import { ux } from '@oclif/core/ux';
 
-import dotenv from 'dotenv';
+import { populate } from 'dotenv';
 import { DEFAULT_ENV_PATH, CONFIG_SHOULD_LOG_KEY } from '../../src/shared/constants.js';
 import hook from '../../src/hooks/prerun.js';
 
@@ -58,20 +58,18 @@ const dotenvPopulateImpl = (
 };
 
 jest.mock('dotenv', () => ({
-  default: {
-    parse: (val?: string) => {
-      return (val?.split('\n') ?? [])
-        .filter((val) => val)
-        .map((splitValue: string) => {
-          const keyValue = splitValue.split('=');
-          return { [keyValue[0]]: keyValue[1] };
-        })
-        .reduce((prev, curr) => ({ ...prev, ...curr }), {});
-    },
-    populate: jest.fn((env: Record<string, string>, values: Record<string, string>, options?: { override?: boolean }) =>
-      dotenvPopulateImpl(env, values, options ?? {})
-    ),
+  parse: (val?: string) => {
+    return (val?.split('\n') ?? [])
+      .filter((val) => val)
+      .map((splitValue: string) => {
+        const keyValue = splitValue.split('=');
+        return { [keyValue[0]]: keyValue[1] };
+      })
+      .reduce((prev, curr) => ({ ...prev, ...curr }), {});
   },
+  populate: jest.fn((env: Record<string, string>, values: Record<string, string>, options?: { override?: boolean }) =>
+    dotenvPopulateImpl(env, values, options ?? {})
+  ),
 }));
 
 type FakeReadFileFunction = () => Promise<string>;
@@ -360,7 +358,7 @@ describe('prerun hook', () => {
 
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
-      expect(dotenv.populate).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ FOO: 'bar' }), {
+      expect(populate).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ FOO: 'bar' }), {
         override: true,
       });
     });

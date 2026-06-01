@@ -29,32 +29,30 @@ jest.mock('path', () => ({
 }));
 
 jest.mock('dotenv', () => ({
-  default: {
-    parse: (content?: string) => {
-      const result: Record<string, string> = {};
-      for (const line of (content ?? '').split('\n').filter(Boolean)) {
-        const eq = line.indexOf('=');
-        if (eq > 0) {
-          result[line.slice(0, eq)] = line.slice(eq + 1);
-        }
+  parse: (content?: string) => {
+    const result: Record<string, string> = {};
+    for (const line of (content ?? '').split('\n').filter(Boolean)) {
+      const eq = line.indexOf('=');
+      if (eq > 0) {
+        result[line.slice(0, eq)] = line.slice(eq + 1);
       }
-      return result;
-    },
-    // Mimics dotenv.populate():
-    //    - When override is true: it overwrites existing keys
-    //    - When override is false: leave existing keys unchanged
-    populate: (
-      env: Record<string, string>,
-      values: Record<string, string>,
-      options: { override?: boolean } = { override: false }
-    ) => {
-      const shouldOverrideExistingValue = Boolean(options.override);
-      for (const key of Object.keys(values)) {
-        if (Object.prototype.hasOwnProperty.call(env, key) || !shouldOverrideExistingValue) {
-          env[key] = values[key];
-        }
+    }
+    return result;
+  },
+  // Mimics dotenv.populate():
+  //    - When override is true: it overwrites existing keys
+  //    - When override is false: leave existing keys unchanged
+  populate: (
+    env: Record<string, string>,
+    values: Record<string, string>,
+    options: { override?: boolean } = { override: false }
+  ) => {
+    const shouldOverrideExistingValue = Boolean(options.override);
+    for (const key of Object.keys(values)) {
+      if (Object.prototype.hasOwnProperty.call(env, key) || !shouldOverrideExistingValue) {
+        env[key] = values[key];
       }
-    },
+    }
   },
 }));
 

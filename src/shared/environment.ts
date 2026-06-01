@@ -1,6 +1,6 @@
 import { ux } from '@oclif/core/ux';
 
-import dotenvLib from 'dotenv';
+import { parse, populate } from 'dotenv';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -46,8 +46,8 @@ async function validateEnvFile(envFilePath: string, envFileIndex: number, should
 
 async function loadEnvFile(envFilePath: string): Promise<Record<string, string>> {
   const fileContent = await fs.readFile(envFilePath, 'utf8');
-  const parsedContent = dotenvLib.parse(fileContent);
-  dotenvLib.populate(process.env as Record<string, string>, parsedContent, { override: true });
+  const parsedContent = parse(fileContent);
+  populate(process.env as Record<string, string>, parsedContent, { override: true });
   return parsedContent;
 }
 

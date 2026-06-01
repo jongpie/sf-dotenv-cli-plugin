@@ -12,6 +12,7 @@ yarn-error.log*
 lib/
 dist/
 build/
+oclif.manifest.json
 
 # Logs
 logs

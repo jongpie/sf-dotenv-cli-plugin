@@ -30,8 +30,6 @@
   "types": "lib/index.d.ts",
   "files": [
     "lib/**/*",
-    "messages/**/*",
-    "npm-shrinkwrap.json",
     "oclif.manifest.json"
   ],
   "dependencies": {
@@ -53,6 +51,7 @@
     "husky": "9.1.7",
     "jest": "30.3.0",
     "lint-staged": "16.4.0",
+    "oclif": "4.23.10",
     "prettier": "3.8.1",
     "ts-jest": "29.4.6",
     "typescript": "5.9.3",
@@ -86,7 +85,7 @@
     "lint:fix": "eslint . --fix",
     "lint:verify": "eslint .",
     "postpack": "rm -f oclif.manifest.json",
-    "prepack": "npm run compile",
+    "prepack": "npm run compile && oclif manifest",
     "preversion": "npm run compile",
     "test:coverage": "jest --coverage",
     "test:debug": "jest --inspect-brk",

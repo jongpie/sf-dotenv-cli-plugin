@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   {
-    ignores: ['lib/**'],
+    ignores: ['lib/**', 'coverage/**'],
   },
   {
     files: ['src/**/*.ts', 'test/**/*.ts'],

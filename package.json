@@ -33,7 +33,7 @@
     "oclif.manifest.json"
   ],
   "dependencies": {
-    "@oclif/core": "4.10.2",
+    "@oclif/core": "4.11.4",
     "dotenv": "17.3.1",
     "fs-extra": "11.3.4"
   },

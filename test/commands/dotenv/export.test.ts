@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { Config } from '@oclif/core';
 
 interface ParseResult {
-  flags: { 'output-file': string };
+  flags: { 'output-file'?: string };
 }
 
 const actualPath = jest.requireActual<typeof import('node:path')>('node:path');
@@ -13,6 +13,11 @@ const mockReadFileSync = jest.fn() as jest.Mock;
 const mockResolve = jest.fn() as jest.Mock;
 const mockStatSync = jest.fn() as jest.Mock;
 const mockWriteFileSync = jest.fn() as jest.Mock;
+const mockResolveConfiguredDefaultEnvFile = jest.fn() as jest.Mock<() => Promise<string | undefined>>;
+
+jest.mock('../../../src/shared/environment.js', () => ({
+  resolveConfiguredDefaultEnvFile: () => mockResolveConfiguredDefaultEnvFile(),
+}));
 
 jest.mock('node:fs', () => ({
   appendFileSync: (p: string, data: string) => mockAppendFileSync(p, data),
@@ -47,7 +52,7 @@ jest.mock('@salesforce/sf-plugins-core', () => ({
     table = jest.fn();
   },
   Flags: {
-    string: (opts?: { default?: string }) => opts?.default ?? '.env',
+    string: (opts?: { default?: string }) => opts?.default,
     boolean: (opts?: { default?: boolean }) => opts?.default ?? true,
   },
 }));
@@ -70,12 +75,13 @@ describe('dotenv export command', () => {
     mockStatSync.mockReturnValue({ isDirectory: () => false });
     // Default: no project file (tests that need it override)
     mockExistsSync.mockReturnValue(false);
+    mockResolveConfiguredDefaultEnvFile.mockResolvedValue(undefined);
   });
 
   async function runCommand(argv: string[], flags: { 'output-file'?: string } = {}): Promise<void> {
     const cmd = new Generate(argv, mockConfig);
     const resolvedFlags: ParseResult['flags'] = {
-      'output-file': flags['output-file'] ?? '.env',
+      'output-file': flags['output-file'],
     };
     const mockParse = jest.fn() as jest.Mock<() => Promise<ParseResult>>;
     mockParse.mockResolvedValue({ flags: resolvedFlags });
@@ -253,6 +259,38 @@ describe('dotenv export command', () => {
       });
 
       expect(mockResolve).toHaveBeenCalledWith(expect.any(String), '.env.local');
+    });
+
+    it('falls back to the sf config default-env-file when no flag is provided', async () => {
+      mockResolveConfiguredDefaultEnvFile.mockResolvedValue('.env.dev');
+      mockExistsSync.mockReturnValueOnce(true).mockReturnValueOnce(false);
+      mockReadFileSync.mockImplementation((p: unknown) => {
+        if (pathIncludes(p, SFDX_PROJECT_FILE)) {
+          return JSON.stringify({ replacements: [{ replaceWithEnv: 'X' }] });
+        }
+        throw new Error('unexpected read');
+      });
+
+      await runCommand(['dotenv', 'export']);
+
+      expect(mockResolve).toHaveBeenCalledWith(expect.any(String), '.env.dev');
+    });
+
+    it('prefers the --output-file flag over the sf config default-env-file', async () => {
+      mockResolveConfiguredDefaultEnvFile.mockResolvedValue('.env.dev');
+      mockExistsSync.mockReturnValueOnce(true).mockReturnValueOnce(false);
+      mockReadFileSync.mockImplementation((p: unknown) => {
+        if (pathIncludes(p, SFDX_PROJECT_FILE)) {
+          return JSON.stringify({ replacements: [{ replaceWithEnv: 'X' }] });
+        }
+        throw new Error('unexpected read');
+      });
+
+      await runCommand(['dotenv', 'export', '--output-file', '.env.explicit'], {
+        'output-file': '.env.explicit',
+      });
+
+      expect(mockResolve).toHaveBeenCalledWith(expect.any(String), '.env.explicit');
     });
   });
 });

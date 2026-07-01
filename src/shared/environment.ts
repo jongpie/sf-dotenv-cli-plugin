@@ -4,16 +4,30 @@ import { parse, populate } from 'dotenv';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { DEFAULT_ENV_PATH } from '../shared/index.js';
+import { ConfigAggregator } from '@salesforce/core';
 
-function determineEnvFilePath(argv: string[], explicitPath?: string) {
+import { CONFIG_DEFAULT_ENV_FILE_KEY, DEFAULT_ENV_PATH } from '../shared/index.js';
+import configMeta from './configMeta.js';
+
+/** Look up the `default-env-file` value from `sf config` (local overrides global). Returns undefined if unset/blank. */
+export const resolveConfiguredDefaultEnvFile = async (): Promise<string | undefined> => {
+  const configAggregator = await ConfigAggregator.create({ customConfigMeta: configMeta });
+  const raw = configAggregator.getPropertyValue(CONFIG_DEFAULT_ENV_FILE_KEY);
+  if (typeof raw !== 'string') {
+    return undefined;
+  }
+  const trimmed = raw.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+function determineEnvFilePath(argv: string[], explicitPath?: string, configDefault?: string) {
   if (explicitPath !== undefined) {
     return { envFilePath: path.resolve(explicitPath), envFileIndex: -1 };
   }
 
   // Check for --env or -e parameter in command arguments
   const envFileIndex = argv.findIndex((arg: string) => arg === '--env' || arg === '-e');
-  let envFilePath = DEFAULT_ENV_PATH;
+  let envFilePath: string;
 
   if (envFileIndex !== -1 && envFileIndex + 1 < argv.length) {
     envFilePath = argv[envFileIndex + 1];
@@ -21,6 +35,10 @@ function determineEnvFilePath(argv: string[], explicitPath?: string) {
     argv.splice(envFileIndex, 2);
   } else if (process.env.SF_DOTENV_FILE) {
     envFilePath = process.env.SF_DOTENV_FILE;
+  } else if (configDefault !== undefined) {
+    envFilePath = configDefault;
+  } else {
+    envFilePath = DEFAULT_ENV_PATH;
   }
 
   return { envFilePath: path.resolve(envFilePath), envFileIndex };
@@ -57,8 +75,13 @@ export interface EnvConfig {
   env: Record<string, string>;
 }
 
-export const getEnv = async (argv: string[], shouldLog = false, explicitEnvFilePath?: string): Promise<EnvConfig> => {
-  const { envFilePath, envFileIndex } = determineEnvFilePath(argv, explicitEnvFilePath);
+export const getEnv = async (
+  argv: string[],
+  shouldLog = false,
+  explicitEnvFilePath?: string,
+  configDefault?: string
+): Promise<EnvConfig> => {
+  const { envFilePath, envFileIndex } = determineEnvFilePath(argv, explicitEnvFilePath, configDefault);
   if (!(await validateEnvFile(envFilePath, envFileIndex, shouldLog))) {
     return { envFilePath: path.relative(process.cwd(), envFilePath), env: {} };
   }

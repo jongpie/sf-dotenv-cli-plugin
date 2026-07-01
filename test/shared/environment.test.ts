@@ -2,8 +2,19 @@ import { jest } from '@jest/globals';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { DEFAULT_ENV_PATH, getEnv } from '../../src/shared/index.js';
+import { DEFAULT_ENV_PATH, getEnv, resolveConfiguredDefaultEnvFile } from '../../src/shared/index.js';
 import { ux } from '@oclif/core/ux';
+
+const configGetPropertyValueMock = jest.fn<(key: string) => unknown>();
+
+jest.mock('@salesforce/core', () => ({
+  ConfigAggregator: {
+    create: () =>
+      Promise.resolve({
+        getPropertyValue: (key: string) => configGetPropertyValueMock(key),
+      }),
+  },
+}));
 
 jest.mock('@oclif/core/ux', () => ({
   ux: {
@@ -88,10 +99,19 @@ describe('getEnv (shared/environment)', () => {
 
       expect(pathResolve).toHaveBeenCalledWith('.env.ci');
     });
+
+    it('ignores configDefault when explicit path is provided', async () => {
+      mockedPathExists.mockResolvedValue(true);
+      mockedReadFile.mockResolvedValue('FOO=bar');
+
+      const result = await getEnv([], false, '.env.staging', '.env.from-config');
+
+      expect(result.envFilePath).toBe('.env.staging');
+    });
   });
 
   describe('argv-based path (--env / -e)', () => {
-    it('uses default .env when argv has no --env or -e', async () => {
+    it('uses default .env when argv has no --env or -e and no configDefault', async () => {
       mockedPathExists.mockResolvedValue(true);
       mockedReadFile.mockResolvedValue('X=y');
 
@@ -122,6 +142,21 @@ describe('getEnv (shared/environment)', () => {
       expect(result.envFilePath).toBe('short.env');
       expect(result.env).toEqual({ A: 'b' });
     });
+
+    it('--env in argv overrides both SF_DOTENV_FILE and configDefault', async () => {
+      const ORIGINAL_ENV = process.env;
+      process.env = { ...ORIGINAL_ENV, SF_DOTENV_FILE: 'from-var.env' };
+      const argv = ['cmd', '--env', 'from-argv.env'];
+      mockedPathExists.mockResolvedValue(true);
+      mockedReadFile.mockResolvedValue('K=v');
+
+      try {
+        const result = await getEnv(argv, false, undefined, 'from-config.env');
+        expect(result.envFilePath).toBe('from-argv.env');
+      } finally {
+        process.env = ORIGINAL_ENV;
+      }
+    });
   });
 
   describe('SF_DOTENV_FILE', () => {
@@ -140,6 +175,37 @@ describe('getEnv (shared/environment)', () => {
 
       expect(result.envFilePath).toBe('env-file.env');
       expect(result.env).toEqual({ E: '1' });
+    });
+
+    it('SF_DOTENV_FILE takes precedence over configDefault', async () => {
+      process.env = { ...ORIGINAL_ENV, SF_DOTENV_FILE: 'from-var.env' };
+      mockedPathExists.mockResolvedValue(true);
+      mockedReadFile.mockResolvedValue('E=1');
+
+      const result = await getEnv(['cmd'], false, undefined, 'from-config.env');
+
+      expect(result.envFilePath).toBe('from-var.env');
+    });
+  });
+
+  describe('configDefault (sf config default-env-file)', () => {
+    it('uses configDefault when no --env in argv and no SF_DOTENV_FILE set', async () => {
+      mockedPathExists.mockResolvedValue(true);
+      mockedReadFile.mockResolvedValue('C=1');
+
+      const result = await getEnv(['cmd'], false, undefined, '.env.dev');
+
+      expect(result.envFilePath).toBe('.env.dev');
+      expect(result.env).toEqual({ C: '1' });
+    });
+
+    it('falls back to DEFAULT_ENV_PATH when configDefault is undefined', async () => {
+      mockedPathExists.mockResolvedValue(true);
+      mockedReadFile.mockResolvedValue('D=1');
+
+      const result = await getEnv(['cmd'], false, undefined, undefined);
+
+      expect(result.envFilePath).toBe(DEFAULT_ENV_PATH);
     });
   });
 
@@ -201,5 +267,42 @@ describe('getEnv (shared/environment)', () => {
       expect(result.env).toEqual({ ALPHA: 'one', BETA: 'two' });
       expect(result.envFilePath).toBe(DEFAULT_ENV_PATH);
     });
+  });
+});
+
+describe('resolveConfiguredDefaultEnvFile', () => {
+  beforeEach(() => {
+    configGetPropertyValueMock.mockReset();
+  });
+
+  it('returns the configured value when present', async () => {
+    configGetPropertyValueMock.mockReturnValue('.env.dev');
+    await expect(resolveConfiguredDefaultEnvFile()).resolves.toBe('.env.dev');
+  });
+
+  it('trims surrounding whitespace', async () => {
+    configGetPropertyValueMock.mockReturnValue('  .env.dev  ');
+    await expect(resolveConfiguredDefaultEnvFile()).resolves.toBe('.env.dev');
+  });
+
+  it('returns undefined when unset', async () => {
+    configGetPropertyValueMock.mockReturnValue(undefined);
+    await expect(resolveConfiguredDefaultEnvFile()).resolves.toBeUndefined();
+  });
+
+  it('returns undefined for a whitespace-only value', async () => {
+    configGetPropertyValueMock.mockReturnValue('   ');
+    await expect(resolveConfiguredDefaultEnvFile()).resolves.toBeUndefined();
+  });
+
+  it('returns undefined for non-string values', async () => {
+    configGetPropertyValueMock.mockReturnValue(true);
+    await expect(resolveConfiguredDefaultEnvFile()).resolves.toBeUndefined();
+  });
+
+  it('queries the default-env-file config key', async () => {
+    configGetPropertyValueMock.mockReturnValue(undefined);
+    await resolveConfiguredDefaultEnvFile();
+    expect(configGetPropertyValueMock).toHaveBeenCalledWith('default-env-file');
   });
 });

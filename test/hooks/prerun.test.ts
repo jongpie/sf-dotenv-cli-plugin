@@ -6,18 +6,24 @@ import { Config } from '@oclif/core';
 import { ux } from '@oclif/core/ux';
 
 import { populate } from 'dotenv';
-import { DEFAULT_ENV_PATH, CONFIG_SHOULD_LOG_KEY } from '../../src/shared/constants.js';
+import { DEFAULT_ENV_PATH, CONFIG_SHOULD_LOG_KEY, CONFIG_DEFAULT_ENV_FILE_KEY } from '../../src/shared/constants.js';
 import hook from '../../src/hooks/prerun.js';
 
 const shouldLogMock = jest.fn();
+const defaultEnvFileMock = jest.fn<() => unknown>();
 
 jest.mock('@salesforce/core', () => ({
   ConfigAggregator: {
     create: () =>
       Promise.resolve({
         getPropertyValue: (key: string) => {
-          expect(key).toEqual(CONFIG_SHOULD_LOG_KEY);
-          return shouldLogMock();
+          if (key === CONFIG_SHOULD_LOG_KEY) {
+            return shouldLogMock();
+          }
+          if (key === CONFIG_DEFAULT_ENV_FILE_KEY) {
+            return defaultEnvFileMock();
+          }
+          throw new Error(`Unexpected config key requested: ${key}`);
         },
       }),
   },
@@ -112,6 +118,7 @@ describe('prerun hook', () => {
     // Default path.resolve mock
     mockedResolve.mockImplementation((...args: string[]) => args.join('/'));
     shouldLogMock.mockReturnValue('true');
+    defaultEnvFileMock.mockReturnValue(undefined);
     // Mock ux console methods
     jest.spyOn(ux, 'stdout').mockImplementation(mockLogger);
     jest.spyOn(ux, 'warn').mockImplementation(mockLogger);
@@ -237,6 +244,52 @@ describe('prerun hook', () => {
       await testHook({ Command: mockCommand, config: mockConfig, argv });
 
       expect(argv).toEqual(['some-command', 'other-arg']);
+    });
+
+    it('should use default-env-file from sf config when no --env or SF_DOTENV_FILE is set', async () => {
+      defaultEnvFileMock.mockReturnValue('.env.dev');
+      const argv = ['some-command'];
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
+
+      await testHook({ Command: mockCommand, config: mockConfig, argv });
+
+      expect(mockedResolve).toHaveBeenCalledWith('.env.dev');
+      expect(mockedPathExists).toHaveBeenCalledWith('.env.dev');
+    });
+
+    it('should ignore blank default-env-file config values', async () => {
+      defaultEnvFileMock.mockReturnValue('   ');
+      const argv = ['some-command'];
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
+
+      await testHook({ Command: mockCommand, config: mockConfig, argv });
+
+      expect(mockedResolve).toHaveBeenCalledWith(DEFAULT_ENV_PATH);
+    });
+
+    it('should let SF_DOTENV_FILE take precedence over default-env-file config', async () => {
+      process.env.SF_DOTENV_FILE = 'from-var.env';
+      defaultEnvFileMock.mockReturnValue('from-config.env');
+      const argv = ['some-command'];
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
+
+      await testHook({ Command: mockCommand, config: mockConfig, argv });
+
+      expect(mockedResolve).toHaveBeenCalledWith('from-var.env');
+    });
+
+    it('should let --env take precedence over default-env-file config', async () => {
+      defaultEnvFileMock.mockReturnValue('from-config.env');
+      const argv = ['some-command', '--env', 'from-argv.env'];
+      mockedPathExists.mockImplementation(() => Promise.resolve(true));
+      mockedReadFile.mockImplementation(() => Promise.resolve('TEST_VAR=test_value'));
+
+      await testHook({ Command: mockCommand, config: mockConfig, argv });
+
+      expect(mockedResolve).toHaveBeenCalledWith('from-argv.env');
     });
   });
 

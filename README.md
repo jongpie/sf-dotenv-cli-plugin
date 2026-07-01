@@ -24,21 +24,11 @@ Run any `sf` command, and the plugin automatically loads the file `.env` (if it 
 
 ## Installation
 
+**Unsigned plugin**: This is a community plugin, so the `sf` CLI may prompt you to confirm installation. In CI/CD or non-interactive use, first add the plugin to the CLI allowlist so it installs without a prompt:
+
 ```bash
+sf plugins trust allowlist add @jongpie/sf-dotenv-cli-plugin
 sf plugins install @jongpie/sf-dotenv-cli-plugin
-```
-
-**Unsigned plugin**: This is a community plugin, so the CLI may prompt you to confirm installation. In CI/CD or non-interactive use, add the plugin to the CLI allowlist so it installs without a prompt:
-
-| Platform    | AllowList Path                                          |
-| ----------- | ------------------------------------------------------- |
-| Linux/macOS | `$HOME/.config/sf/unsignedPluginAllowList.json`         |
-| Windows     | `%USERPROFILE%\.config\sf\unsignedPluginAllowList.json` |
-
-Example allowlist (array of package names):
-
-```json
-["@jongpie/sf-dotenv-cli-plugin"]
 ```
 
 ## Usage: Automatically Load `.env` Files with Any `sf` CLI Commands
@@ -142,7 +132,8 @@ USAGE
   $ sf dotenv inspect [--json] [--flags-dir <value>] [-e <value>] [--show-values]
 
 FLAGS
-  -e, --env=<value>  [default: .env] Path to the .env file to load.
+  -e, --env=<value>  Path to the .env file to load. Defaults to the "default-env-file" `sf config`
+                     value, then the SF_DOTENV_FILE environment variable, and finally ".env".
       --show-values  Print the loaded environment variable names and values.
 
 GLOBAL FLAGS
@@ -160,6 +151,24 @@ GLOBAL FLAGS
 
   You can also change this setting globally by adding the flag `--global`. To re-enable logging, run: `sf config set should-log-env true`.
 
+- **Default env file**: If your project uses a file other than `.env` (for example `.env.dev`), you can point the plugin at it via `sf config` instead of passing `--env` every time or exporting `SF_DOTENV_FILE`:
+
+  ```bash
+  # Applies to the current project only (stored in .sf/config.json)
+  sf config set default-env-file .env.dev
+
+  # Applies to every project on this machine
+  sf config set default-env-file .env.dev --global
+  ```
+
+  Both `sf dotenv inspect` and `sf dotenv export` honor the same value, so reads and writes stay in sync. To remove the setting, run `sf config unset default-env-file` (add `--global` for the global scope).
+
+  The full precedence order for choosing which env file to load is:
+  1. `--env` / `-e` flag on the command
+  2. `SF_DOTENV_FILE` environment variable
+  3. `default-env-file` from `sf config` (local project scope, then global)
+  4. `.env` in the current directory
+
 - **Plugin-Specific Environment Variables**: A few environment variables can be set in your shell to control plugin behavior:
   - `SF_DOTENV_DISABLED` – set to `true` to disable automatic loading.
-  - `SF_DOTENV_FILE` – path to the `.env` file used by automatic loading (default: `.env` in the current directory).
+  - `SF_DOTENV_FILE` – path to the `.env` file used by automatic loading (takes precedence over `default-env-file` from `sf config`).

@@ -3,6 +3,7 @@ import { ux } from '@oclif/core';
 import { ConfigAggregator } from '@salesforce/core';
 
 import {
+  CONFIG_DEFAULT_ENV_FILE_KEY,
   CONFIG_SHOULD_LOG_KEY,
   configMeta as customConfigMeta,
   displayLoadedEnvVars,
@@ -61,8 +62,14 @@ const hook: Hook.Prerun = async function ({ Command, argv }) {
     return;
   }
 
+  const rawConfiguredDefault = configAggregator.getPropertyValue(CONFIG_DEFAULT_ENV_FILE_KEY);
+  const configuredDefault =
+    typeof rawConfiguredDefault === 'string' && rawConfiguredDefault.trim().length > 0
+      ? rawConfiguredDefault.trim()
+      : undefined;
+
   try {
-    const envConfig = await getEnv(argv, shouldLog);
+    const envConfig = await getEnv(argv, shouldLog, undefined, configuredDefault);
     displayLoadingMessage(envConfig, argv);
   } catch (error) {
     handleLoadError(error);

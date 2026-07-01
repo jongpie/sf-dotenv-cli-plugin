@@ -4,6 +4,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { PLUGIN_NAME } from '../../shared/constants.js';
+import { resolveConfiguredDefaultEnvFile } from '../../shared/environment.js';
 
 interface SfdxProjectReplacement {
   filename?: string;
@@ -42,14 +43,13 @@ export default class DotEnvExport extends SfCommand<void> {
     'output-file': Flags.string({
       char: 'o',
       summary: 'Path to the output .env file.',
-      description: `Specify the output file path. Defaults to "${DEFAULT_OUTPUT_FILE}" in the current directory.`,
-      default: DEFAULT_OUTPUT_FILE,
+      description: `Specify the output file path. Defaults to the "default-env-file" \`sf config\` value if set, otherwise "${DEFAULT_OUTPUT_FILE}" in the current directory.`,
     }),
   };
 
   public async run(): Promise<void> {
     const { flags } = await this.parse(DotEnvExport);
-    const outputFile = flags['output-file'];
+    const outputFile = flags['output-file'] ?? (await resolveConfiguredDefaultEnvFile()) ?? DEFAULT_OUTPUT_FILE;
 
     const projectConfig = this.loadProjectConfig();
     const projectEnvironmentKeys = this.getProjectEnvironmentKeys(projectConfig);

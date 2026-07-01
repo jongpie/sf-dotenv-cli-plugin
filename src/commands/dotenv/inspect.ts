@@ -1,5 +1,11 @@
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
-import { DEFAULT_ENV_PATH, displayLoadedEnvVars, getEnv, PLUGIN_NAME } from '../../shared/index.js';
+import {
+  DEFAULT_ENV_PATH,
+  displayLoadedEnvVars,
+  getEnv,
+  PLUGIN_NAME,
+  resolveConfiguredDefaultEnvFile,
+} from '../../shared/index.js';
 
 export default class DotEnvInspect extends SfCommand<void> {
   public static readonly summary =
@@ -12,8 +18,7 @@ export default class DotEnvInspect extends SfCommand<void> {
     env: Flags.string({
       char: 'e',
       summary: 'Path to the .env file to load.',
-      default: DEFAULT_ENV_PATH,
-      defaultHelp: DEFAULT_ENV_PATH,
+      description: `Defaults to the "default-env-file" \`sf config\` value, then the SF_DOTENV_FILE environment variable, and finally "${DEFAULT_ENV_PATH}".`,
     }),
     'show-values': Flags.boolean({
       summary: 'Print the loaded environment variable names and values.',
@@ -23,7 +28,8 @@ export default class DotEnvInspect extends SfCommand<void> {
 
   public async run(): Promise<void> {
     const { flags } = await this.parse(DotEnvInspect);
-    const envConfig = await getEnv(this.argv, true, flags.env);
+    const configuredDefault = flags.env ? undefined : await resolveConfiguredDefaultEnvFile();
+    const envConfig = await getEnv(this.argv, true, flags.env, configuredDefault);
 
     if (!this.jsonEnabled()) {
       displayLoadedEnvVars(envConfig, { showValues: flags['show-values'] });

@@ -35,7 +35,7 @@
   "dependencies": {
     "@oclif/core": "4.11.11",
     "dotenv": "17.4.2",
-    "fs-extra": "11.3.5"
+    "fs-extra": "11.3.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.5",
